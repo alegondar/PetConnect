@@ -1,0 +1,1767 @@
+openapi: 3.0.3
+info:
+  title: PetConnect API
+  description: |
+    API REST para PetConnect — plataforma de mascotas que conecta dueños,
+    veterinarios y comunidad. Incluye feed social, ranking semanal, InstaPet
+    (red social por mascota), mascotas perdidas y adopciones.
+  version: 0.1.0
+  contact:
+    name: PetConnect Team
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Servidor local de desarrollo
+  - url: https://api.petconnect.app/api/v1
+    description: Producción
+
+security:
+  - bearerAuth: []
+
+paths:
+
+  # =========================================================================
+  # AUTH
+  # =========================================================================
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Registrar nuevo usuario
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Usuario registrado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Iniciar sesión
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login exitoso
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Obtener perfil del usuario autenticado
+      responses:
+        "200":
+          description: Perfil del usuario
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+    put:
+      tags: [Auth]
+      summary: Actualizar perfil propio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Perfil actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+
+  # =========================================================================
+  # PETS
+  # =========================================================================
+  /pets:
+    get:
+      tags: [Pets]
+      summary: Listar mascotas
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: species
+          in: query
+          schema:
+            type: string
+          description: Filtrar por especie
+        - name: owner_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filtrar por dueño
+      responses:
+        "200":
+          description: Lista paginada de mascotas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedPets"
+    post:
+      tags: [Pets]
+      summary: Registrar nueva mascota
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePetRequest"
+      responses:
+        "201":
+          description: Mascota creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /pets/{pet_id}:
+    get:
+      tags: [Pets]
+      summary: Obtener mascota por ID
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+      responses:
+        "200":
+          description: Detalle de mascota
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Pets]
+      summary: Actualizar mascota
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePetRequest"
+      responses:
+        "200":
+          description: Mascota actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pet"
+    delete:
+      tags: [Pets]
+      summary: Eliminar mascota
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+      responses:
+        "204":
+          description: Mascota eliminada
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # --- Vet Visits ---
+  /pets/{pet_id}/vet-visits:
+    get:
+      tags: [VetVisits]
+      summary: Listar visitas al veterinario de una mascota
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Lista paginada de visitas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedVetVisits"
+    post:
+      tags: [VetVisits]
+      summary: Registrar visita al veterinario
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVetVisitRequest"
+      responses:
+        "201":
+          description: Visita registrada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VetVisit"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /pets/{pet_id}/vet-visits/{visit_id}:
+    put:
+      tags: [VetVisits]
+      summary: Actualizar visita al veterinario
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+        - $ref: "#/components/parameters/VisitId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateVetVisitRequest"
+      responses:
+        "200":
+          description: Visita actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VetVisit"
+    delete:
+      tags: [VetVisits]
+      summary: Eliminar visita al veterinario
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+        - $ref: "#/components/parameters/VisitId"
+      responses:
+        "204":
+          description: Visita eliminada
+
+  # --- Pet Events (Health Tracking) ---
+  /pets/{pet_id}/events:
+    get:
+      tags: [PetEvents]
+      summary: Listar eventos de health tracking de una mascota
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Lista paginada de eventos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedPetEvents"
+    post:
+      tags: [PetEvents]
+      summary: Registrar evento de health tracking
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePetEventRequest"
+      responses:
+        "201":
+          description: Evento registrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PetEvent"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /pets/{pet_id}/events/{event_id}:
+    put:
+      tags: [PetEvents]
+      summary: Actualizar evento
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+        - $ref: "#/components/parameters/EventId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePetEventRequest"
+      responses:
+        "200":
+          description: Evento actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PetEvent"
+    delete:
+      tags: [PetEvents]
+      summary: Eliminar evento
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+        - $ref: "#/components/parameters/EventId"
+      responses:
+        "204":
+          description: Evento eliminado
+
+  # =========================================================================
+  # FEED (Social General)
+  # =========================================================================
+  /feed:
+    get:
+      tags: [Feed]
+      summary: Obtener feed global de posts
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Posts paginados del feed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedPosts"
+    post:
+      tags: [Feed]
+      summary: Crear nuevo post en el feed
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePostRequest"
+      responses:
+        "201":
+          description: Post creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /feed/{post_id}:
+    get:
+      tags: [Feed]
+      summary: Obtener detalle de un post
+      parameters:
+        - $ref: "#/components/parameters/PostId"
+      responses:
+        "200":
+          description: Detalle del post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PostDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Feed]
+      summary: Eliminar post
+      parameters:
+        - $ref: "#/components/parameters/PostId"
+      responses:
+        "204":
+          description: Post eliminado
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /feed/{post_id}/like:
+    post:
+      tags: [Feed]
+      summary: Dar like a un post
+      parameters:
+        - $ref: "#/components/parameters/PostId"
+      responses:
+        "201":
+          description: Like registrado
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [Feed]
+      summary: Quitar like de un post
+      parameters:
+        - $ref: "#/components/parameters/PostId"
+      responses:
+        "204":
+          description: Like removido
+
+  /feed/{post_id}/comments:
+    get:
+      tags: [Feed]
+      summary: Listar comentarios de un post
+      parameters:
+        - $ref: "#/components/parameters/PostId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Comentarios paginados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedComments"
+    post:
+      tags: [Feed]
+      summary: Comentar en un post
+      parameters:
+        - $ref: "#/components/parameters/PostId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCommentRequest"
+      responses:
+        "201":
+          description: Comentario creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Comment"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /feed/{post_id}/comments/{comment_id}:
+    delete:
+      tags: [Feed]
+      summary: Eliminar comentario
+      parameters:
+        - $ref: "#/components/parameters/PostId"
+        - $ref: "#/components/parameters/CommentId"
+      responses:
+        "204":
+          description: Comentario eliminado
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # =========================================================================
+  # RANKING
+  # =========================================================================
+  /ranking:
+    get:
+      tags: [Ranking]
+      summary: Obtener ranking semanal de mascotas
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+          description: Cantidad de resultados (máx 100)
+      responses:
+        "200":
+          description: Ranking semanal
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/RankingEntry"
+                  updated_at:
+                    type: string
+                    format: date-time
+
+  # =========================================================================
+  # LOST PETS
+  # =========================================================================
+  /lost-pets:
+    get:
+      tags: [LostPets]
+      summary: Listar mascotas perdidas
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [lost, found]
+          description: Filtrar por estado
+      responses:
+        "200":
+          description: Lista paginada de mascotas perdidas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedLostPets"
+    post:
+      tags: [LostPets]
+      summary: Reportar mascota perdida
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLostPetRequest"
+      responses:
+        "201":
+          description: Reporte creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostPet"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /lost-pets/{id}:
+    get:
+      tags: [LostPets]
+      summary: Obtener detalle de mascota perdida
+      parameters:
+        - $ref: "#/components/parameters/LostPetId"
+      responses:
+        "200":
+          description: Detalle de mascota perdida
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostPetDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [LostPets]
+      summary: Actualizar reporte de mascota perdida
+      parameters:
+        - $ref: "#/components/parameters/LostPetId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLostPetRequest"
+      responses:
+        "200":
+          description: Reporte actualizado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LostPet"
+    delete:
+      tags: [LostPets]
+      summary: Eliminar reporte
+      parameters:
+        - $ref: "#/components/parameters/LostPetId"
+      responses:
+        "204":
+          description: Reporte eliminado
+
+  # =========================================================================
+  # ADOPTIONS
+  # =========================================================================
+  /adoptions:
+    get:
+      tags: [Adoptions]
+      summary: Listar adopciones
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [available, pending, adopted]
+          description: Filtrar por estado
+      responses:
+        "200":
+          description: Lista paginada de adopciones
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedAdoptions"
+    post:
+      tags: [Adoptions]
+      summary: Publicar mascota en adopción
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAdoptionRequest"
+      responses:
+        "201":
+          description: Adopción publicada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Adoption"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /adoptions/{id}:
+    get:
+      tags: [Adoptions]
+      summary: Obtener detalle de adopción
+      parameters:
+        - $ref: "#/components/parameters/AdoptionId"
+      responses:
+        "200":
+          description: Detalle de adopción
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdoptionDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Adoptions]
+      summary: Actualizar publicación de adopción
+      parameters:
+        - $ref: "#/components/parameters/AdoptionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAdoptionRequest"
+      responses:
+        "200":
+          description: Adopción actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Adoption"
+    delete:
+      tags: [Adoptions]
+      summary: Eliminar publicación de adopción
+      parameters:
+        - $ref: "#/components/parameters/AdoptionId"
+      responses:
+        "204":
+          description: Publicación eliminada
+
+  # =========================================================================
+  # INSTAPET SOCIAL
+  # =========================================================================
+  /pets/{pet_id}/instapet/posts:
+    get:
+      tags: [InstaPet]
+      summary: Listar posts del perfil InstaPet de una mascota
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Posts paginados del perfil
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedInstaPetPosts"
+    post:
+      tags: [InstaPet]
+      summary: Publicar en el perfil InstaPet de una mascota
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateInstaPetPostRequest"
+      responses:
+        "201":
+          description: Post creado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstaPetPost"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /pets/{pet_id}/instapet/posts/{post_id}:
+    get:
+      tags: [InstaPet]
+      summary: Obtener detalle de un post InstaPet
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+        - $ref: "#/components/parameters/InstaPetPostId"
+      responses:
+        "200":
+          description: Detalle del post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstaPetPostDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [InstaPet]
+      summary: Eliminar post InstaPet
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+        - $ref: "#/components/parameters/InstaPetPostId"
+      responses:
+        "204":
+          description: Post eliminado
+
+  /pets/{pet_id}/followers:
+    get:
+      tags: [InstaPet]
+      summary: Listar seguidores de una mascota
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Seguidores paginados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedFollowers"
+
+  /pets/{pet_id}/follow:
+    post:
+      tags: [InstaPet]
+      summary: Seguir a una mascota
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+      responses:
+        "201":
+          description: Ahora sigues a esta mascota
+        "409":
+          $ref: "#/components/responses/Conflict"
+    delete:
+      tags: [InstaPet]
+      summary: Dejar de seguir a una mascota
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+      responses:
+        "204":
+          description: Dejaste de seguir a esta mascota
+
+  /me/following:
+    get:
+      tags: [InstaPet]
+      summary: Listar mascotas que sigo
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Mascotas que sigo
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedFollowing"
+
+  /pets/{pet_id}/milestones:
+    get:
+      tags: [InstaPet]
+      summary: Listar hitos de vida de una mascota
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Hitos paginados
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedMilestones"
+    post:
+      tags: [InstaPet]
+      summary: Registrar un hito de vida
+      parameters:
+        - $ref: "#/components/parameters/PetId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMilestoneRequest"
+      responses:
+        "201":
+          description: Hito registrado
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstaPetMilestone"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+# ============================================================================
+# COMPONENTS
+# ============================================================================
+components:
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT de Supabase Auth
+
+  # ------------------------------------------------------------------
+  # Parameters (reusables)
+  # ------------------------------------------------------------------
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+      description: Número de página
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        default: 20
+      description: Resultados por página
+    PetId:
+      name: pet_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PostId:
+      name: post_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    CommentId:
+      name: comment_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    VisitId:
+      name: visit_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    EventId:
+      name: event_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    LostPetId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    AdoptionId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    InstaPetPostId:
+      name: post_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  # ------------------------------------------------------------------
+  # Common Responses
+  # ------------------------------------------------------------------
+  responses:
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Unauthorized:
+      description: No autenticado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: No autorizado
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Conflicto (registro duplicado)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ValidationError:
+      description: Error de validación
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  # ------------------------------------------------------------------
+  # Schemas
+  # ------------------------------------------------------------------
+  schemas:
+
+    # Generic
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: "Recurso no encontrado"
+      required: [detail]
+
+    PaginatedResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items: {}
+        total:
+          type: integer
+          example: 42
+        page:
+          type: integer
+          example: 1
+        pages:
+          type: integer
+          example: 3
+
+    # --- Auth ---
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "usuario@email.com"
+        password:
+          type: string
+          minLength: 6
+          example: "SecurePass123"
+        username:
+          type: string
+          example: "petlover"
+      required: [email, password, username]
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          example: "usuario@email.com"
+        password:
+          type: string
+          example: "SecurePass123"
+      required: [email, password]
+
+    AuthResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIs..."
+        token_type:
+          type: string
+          example: "bearer"
+        profile:
+          $ref: "#/components/schemas/Profile"
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        avatar_url:
+          type: string
+          format: uri
+        bio:
+          type: string
+
+    Profile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        user_id:
+          type: string
+          format: uuid
+        username:
+          type: string
+          example: "petlover"
+        avatar_url:
+          type: string
+          format: uri
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    # --- Pet ---
+    Pet:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        owner_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Luna"
+        species:
+          type: string
+          example: "Perro"
+        breed:
+          type: string
+          nullable: true
+          example: "Golden Retriever"
+        age:
+          type: integer
+          nullable: true
+          example: 24
+        weight:
+          type: number
+          nullable: true
+          example: 25.5
+        photo_url:
+          type: string
+          format: uri
+          nullable: true
+        bio:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreatePetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Luna"
+        species:
+          type: string
+          example: "Perro"
+        breed:
+          type: string
+        age:
+          type: integer
+        weight:
+          type: number
+        photo_url:
+          type: string
+          format: uri
+        bio:
+          type: string
+      required: [name, species]
+
+    UpdatePetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        species:
+          type: string
+        breed:
+          type: string
+        age:
+          type: integer
+        weight:
+          type: number
+        photo_url:
+          type: string
+          format: uri
+        bio:
+          type: string
+
+    PaginatedPets:
+      allOf:
+        - $ref: "#/components/schemas/PaginatedResponse"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Pet"
+
+    # --- Vet Visit ---
+    VetVisit:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        pet_id:
+          type: string
+          format: uuid
+        vet_name:
+          type: string
+          example: "Dr. Martínez"
+        visit_date:
+          type: string
+          format: date
+          example: "2026-05-15"
+        reason:
+          type: string
+          example: "Revisión anual"
+        notes:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateVetVisitRequest:
+      type: object
+      properties:
+        vet_name:
+          type: string
+          example: "Dr. Martínez"
+        visit_date:
+          type: string
+          format: date
+        reason:
+          type: string
+        notes:
+          type: string
+      required: [vet_name, visit_date, reason]
+
+    PaginatedVetVisits:
+      allOf:
+        - $ref: "#/components/schemas/PaginatedResponse"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/VetVisit"
+
+    # --- Pet Event (Health Tracking) ---
+    PetEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        pet_id:
+          type: string
+          format: uuid
+        event_type:
+          type: string
+          enum: [vaccination, weight, deworming, medication, other]
+          example: "vaccination"
+        event_date:
+          type: string
+          format: date
+          example: "2026-05-10"
+        value:
+          type: string
+          nullable: true
+          example: "Rabia"
+        notes:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreatePetEventRequest:
+      type: object
+      properties:
+        event_type:
+          type: string
+          enum: [vaccination, weight, deworming, medication, other]
+        event_date:
+          type: string
+          format: date
+        value:
+          type: string
+        notes:
+          type: string
+      required: [event_type, event_date]
+
+    PaginatedPetEvents:
+      allOf:
+        - $ref: "#/components/schemas/PaginatedResponse"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/PetEvent"
+
+    # --- Post (Feed) ---
+    Post:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        author_id:
+          type: string
+          format: uuid
+        pet_id:
+          type: string
+          format: uuid
+        content:
+          type: string
+          nullable: true
+        photo_url:
+          type: string
+          format: uri
+          nullable: true
+        likes_count:
+          type: integer
+          example: 15
+        comments_count:
+          type: integer
+          example: 3
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        author:
+          $ref: "#/components/schemas/Profile"
+        pet:
+          $ref: "#/components/schemas/Pet"
+
+    PostDetail:
+      allOf:
+        - $ref: "#/components/schemas/Post"
+        - type: object
+          properties:
+            liked_by_me:
+              type: boolean
+              example: true
+
+    CreatePostRequest:
+      type: object
+      properties:
+        pet_id:
+          type: string
+          format: uuid
+        content:
+          type: string
+        photo_url:
+          type: string
+          format: uri
+      required: [pet_id]
+
+    PaginatedPosts:
+      allOf:
+        - $ref: "#/components/schemas/PaginatedResponse"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Post"
+
+    # --- Like ---
+    Like:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        post_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+
+    # --- Comment ---
+    Comment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_id:
+          type: string
+          format: uuid
+        post_id:
+          type: string
+          format: uuid
+        content:
+          type: string
+          example: "¡Qué linda foto!"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        author:
+          $ref: "#/components/schemas/Profile"
+
+    CreateCommentRequest:
+      type: object
+      properties:
+        content:
+          type: string
+          example: "¡Qué linda foto!"
+      required: [content]
+
+    PaginatedComments:
+      allOf:
+        - $ref: "#/components/schemas/PaginatedResponse"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Comment"
+
+    # --- Ranking ---
+    RankingEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+          example: 1
+        pet_id:
+          type: string
+          format: uuid
+        pet_name:
+          type: string
+          example: "Luna"
+        pet_photo_url:
+          type: string
+          format: uri
+          nullable: true
+        owner_username:
+          type: string
+          example: "petlover"
+        likes_this_week:
+          type: integer
+          example: 142
+        updated_at:
+          type: string
+          format: date-time
+
+    # --- Lost Pet ---
+    LostPet:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        reporter_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Max"
+        species:
+          type: string
+          example: "Gato"
+        breed:
+          type: string
+          nullable: true
+        photo_url:
+          type: string
+          format: uri
+          nullable: true
+        last_seen_lat:
+          type: number
+          format: double
+          example: 19.4326018
+        last_seen_lng:
+          type: number
+          format: double
+          example: -99.1332093
+        last_seen_address:
+          type: string
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [lost, found]
+          example: "lost"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    LostPetDetail:
+      allOf:
+        - $ref: "#/components/schemas/LostPet"
+        - type: object
+          properties:
+            reporter:
+              $ref: "#/components/schemas/Profile"
+
+    CreateLostPetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        species:
+          type: string
+        breed:
+          type: string
+        photo_url:
+          type: string
+          format: uri
+        last_seen_lat:
+          type: number
+          format: double
+        last_seen_lng:
+          type: number
+          format: double
+        last_seen_address:
+          type: string
+        description:
+          type: string
+      required: [name, species, last_seen_lat, last_seen_lng]
+
+    UpdateLostPetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        species:
+          type: string
+        breed:
+          type: string
+        photo_url:
+          type: string
+          format: uri
+        last_seen_lat:
+          type: number
+          format: double
+        last_seen_lng:
+          type: number
+          format: double
+        last_seen_address:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [lost, found]
+
+    PaginatedLostPets:
+      allOf:
+        - $ref: "#/components/schemas/PaginatedResponse"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/LostPet"
+
+    # --- Adoption ---
+    Adoption:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        pet_id:
+          type: string
+          format: uuid
+        owner_id:
+          type: string
+          format: uuid
+        adopter_id:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          type: string
+          enum: [available, pending, adopted]
+          example: "available"
+        description:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    AdoptionDetail:
+      allOf:
+        - $ref: "#/components/schemas/Adoption"
+        - type: object
+          properties:
+            pet:
+              $ref: "#/components/schemas/Pet"
+            owner:
+              $ref: "#/components/schemas/Profile"
+            adopter:
+              $ref: "#/components/schemas/Profile"
+
+    CreateAdoptionRequest:
+      type: object
+      properties:
+        pet_id:
+          type: string
+          format: uuid
+        description:
+          type: string
+      required: [pet_id]
+
+    UpdateAdoptionRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [available, pending, adopted]
+        adopter_id:
+          type: string
+          format: uuid
+        description:
+          type: string
+
+    PaginatedAdoptions:
+      allOf:
+        - $ref: "#/components/schemas/PaginatedResponse"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/Adoption"
+
+    # --- InstaPet ---
+    InstaPetPost:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        pet_id:
+          type: string
+          format: uuid
+        author_id:
+          type: string
+          format: uuid
+        photo_url:
+          type: string
+          format: uri
+          nullable: true
+        video_url:
+          type: string
+          format: uri
+          nullable: true
+        description:
+          type: string
+          nullable: true
+        likes_count:
+          type: integer
+          example: 32
+        comments_count:
+          type: integer
+          example: 5
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        author:
+          $ref: "#/components/schemas/Profile"
+
+    InstaPetPostDetail:
+      allOf:
+        - $ref: "#/components/schemas/InstaPetPost"
+        - type: object
+          properties:
+            pet:
+              $ref: "#/components/schemas/Pet"
+
+    CreateInstaPetPostRequest:
+      type: object
+      properties:
+        photo_url:
+          type: string
+          format: uri
+        video_url:
+          type: string
+          format: uri
+        description:
+          type: string
+
+    PaginatedInstaPetPosts:
+      allOf:
+        - $ref: "#/components/schemas/PaginatedResponse"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/InstaPetPost"
+
+    # --- InstaPet Follower ---
+    InstaPetFollower:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        follower_id:
+          type: string
+          format: uuid
+        pet_id:
+          type: string
+          format: uuid
+        created_at:
+          type: string
+          format: date-time
+        follower:
+          $ref: "#/components/schemas/Profile"
+
+    FollowingPet:
+      type: object
+      properties:
+        pet_id:
+          type: string
+          format: uuid
+        pet_name:
+          type: string
+          example: "Luna"
+        pet_photo_url:
+          type: string
+          format: uri
+          nullable: true
+        species:
+          type: string
+        followed_at:
+          type: string
+          format: date-time
+
+    PaginatedFollowers:
+      allOf:
+        - $ref: "#/components/schemas/PaginatedResponse"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/InstaPetFollower"
+
+    PaginatedFollowing:
+      allOf:
+        - $ref: "#/components/schemas/PaginatedResponse"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/FollowingPet"
+
+    # --- InstaPet Milestone ---
+    InstaPetMilestone:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        pet_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: "Primer baño"
+        description:
+          type: string
+          nullable: true
+        photo_url:
+          type: string
+          format: uri
+          nullable: true
+        milestone_date:
+          type: string
+          format: date
+          example: "2026-05-01"
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    CreateMilestoneRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          example: "Primer baño"
+        description:
+          type: string
+        photo_url:
+          type: string
+          format: uri
+        milestone_date:
+          type: string
+          format: date
+      required: [title, milestone_date]
+
+    PaginatedMilestones:
+      allOf:
+        - $ref: "#/components/schemas/PaginatedResponse"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/InstaPetMilestone"

@@ -1,0 +1,103 @@
+import api from '../client'
+
+export const authApi = {
+  register: (data: { email: string; password: string; username: string }) =>
+    api.post('/auth/register', data),
+  login: (data: { email: string; password: string }) =>
+    api.post('/auth/login', data),
+  getMe: () => api.get('/auth/me'),
+  updateMe: (data: { username?: string; avatar_url?: string; bio?: string }) =>
+    api.put('/auth/me', data),
+}
+
+export const petsApi = {
+  list: (params?: Record<string, string | number>) =>
+    api.get('/pets', { params }),
+  get: (petId: string) => api.get(`/pets/${petId}`),
+  create: (data: Record<string, unknown>) => api.post('/pets', data),
+  update: (petId: string, data: Record<string, unknown>) =>
+    api.put(`/pets/${petId}`, data),
+  delete: (petId: string) => api.delete(`/pets/${petId}`),
+  uploadPhoto: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post('/pets/upload-photo', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+  listVetVisits: (petId: string, params?: Record<string, number>) =>
+    api.get(`/pets/${petId}/vet-visits`, { params }),
+  createVetVisit: (petId: string, data: Record<string, unknown>) =>
+    api.post(`/pets/${petId}/vet-visits`, data),
+  deleteVetVisit: (petId: string, visitId: string) =>
+    api.delete(`/pets/${petId}/vet-visits/${visitId}`),
+  listEvents: (petId: string, params?: Record<string, number>) =>
+    api.get(`/pets/${petId}/events`, { params }),
+  createEvent: (petId: string, data: Record<string, unknown>) =>
+    api.post(`/pets/${petId}/events`, data),
+  deleteEvent: (petId: string, eventId: string) =>
+    api.delete(`/pets/${petId}/events/${eventId}`),
+}
+
+export const feedApi = {
+  list: (params?: Record<string, number>) =>
+    api.get('/feed', { params }),
+  get: (postId: string) => api.get(`/feed/${postId}`),
+  create: (data: { pet_id: string; content?: string; photo_url?: string }) =>
+    api.post('/feed', data),
+  delete: (postId: string) => api.delete(`/feed/${postId}`),
+  update: (postId: string, data: { content?: string; photo_url?: string }) =>
+    api.put(`/feed/${postId}`, data),
+  like: (postId: string) => api.post(`/feed/${postId}/like`),
+  unlike: (postId: string) => api.delete(`/feed/${postId}/like`),
+  listComments: (postId: string, params?: Record<string, number>) =>
+    api.get(`/feed/${postId}/comments`, { params }),
+  createComment: (postId: string, content: string) =>
+    api.post(`/feed/${postId}/comments`, { content }),
+  deleteComment: (postId: string, commentId: string) =>
+    api.delete(`/feed/${postId}/comments/${commentId}`),
+}
+
+export const rankingApi = {
+  get: (limit = 20) => api.get('/ranking', { params: { limit } }),
+}
+
+export const communityApi = {
+  listLostPets: (params?: Record<string, string | number>) =>
+    api.get('/lost-pets', { params }),
+  getLostPet: (id: string) => api.get(`/lost-pets/${id}`),
+  createLostPet: (data: Record<string, unknown>) =>
+    api.post('/lost-pets', data),
+  updateLostPet: (id: string, data: Record<string, unknown>) =>
+    api.put(`/lost-pets/${id}`, data),
+  deleteLostPet: (id: string) => api.delete(`/lost-pets/${id}`),
+  listAdoptions: (params?: Record<string, string | number>) =>
+    api.get('/adoptions', { params }),
+  getAdoption: (id: string) => api.get(`/adoptions/${id}`),
+  createAdoption: (data: { pet_id: string; description?: string }) =>
+    api.post('/adoptions', data),
+  updateAdoption: (id: string, data: Record<string, unknown>) =>
+    api.put(`/adoptions/${id}`, data),
+  deleteAdoption: (id: string) => api.delete(`/adoptions/${id}`),
+}
+
+export const instapetApi = {
+  listPosts: (petId: string, params?: Record<string, number>) =>
+    api.get(`/pets/${petId}/instapet/posts`, { params }),
+  getPost: (petId: string, postId: string) =>
+    api.get(`/pets/${petId}/instapet/posts/${postId}`),
+  createPost: (petId: string, data: Record<string, unknown>) =>
+    api.post(`/pets/${petId}/instapet/posts`, data),
+  deletePost: (petId: string, postId: string) =>
+    api.delete(`/pets/${petId}/instapet/posts/${postId}`),
+  listFollowers: (petId: string, params?: Record<string, number>) =>
+    api.get(`/pets/${petId}/followers`, { params }),
+  follow: (petId: string) => api.post(`/pets/${petId}/follow`),
+  unfollow: (petId: string) => api.delete(`/pets/${petId}/follow`),
+  listFollowing: (params?: Record<string, number>) =>
+    api.get('/me/following', { params }),
+  listMilestones: (petId: string, params?: Record<string, number>) =>
+    api.get(`/pets/${petId}/milestones`, { params }),
+  createMilestone: (petId: string, data: Record<string, unknown>) =>
+    api.post(`/pets/${petId}/milestones`, data),
+}

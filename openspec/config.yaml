@@ -1,0 +1,80 @@
+schema: spec-driven
+
+context: |
+  Proyecto: PetConnect - App de mascotas con versión web y Android
+  
+  Stack backend:
+    - FastAPI + Python 3.11+
+    - Supabase (PostgreSQL + Auth + Storage)
+    - supabase-py, pydantic v2, python-jose, uvicorn
+    - Deploy: Railway
+  
+  Stack frontend web:
+    - React 18 + Vite + TypeScript
+    - Tailwind CSS v3 + shadcn/ui
+    - React Query v5, Zustand, React Router v6
+    - Axios, react-hook-form + zod
+    - Deploy: Vercel
+  
+  Stack Android (futuro):
+    - Jetpack Compose, MVVM, Hilt, Retrofit, Coil
+  
+  Estructura del monorepo:
+    - backend/   → FastAPI
+    - frontend/  → React + Vite
+    - docs/      → openapi.yaml, db_schema.sql
+  
+  Features v1:
+    - Login/Auth (JWT con Supabase Auth)
+    - Feed de mascotas (posts, likes, comentarios)
+    - Ranking semanal (top mascotas por puntos)
+    - Mis mascotas + visitas al veterinario
+    - Mascotas perdidas (con lat/lng)
+    - Adopción
+    - InstaPet (registro de eventos: vacunas, peso, desparasitación)
+  
+  Paleta de colores:
+    - Primary: #D946EF (pink/magenta)
+    - Secondary: #F0ABFC
+    - Accent: #F59E0B (amber, ranking)
+    - Background: #F9FAFB
+    - Text: #111827
+  
+  Convenciones:
+    - UUID como PK en todas las tablas
+    - Timestamps created_at y updated_at en todas las tablas
+    - Endpoints paginados con ?page=1&limit=20
+    - Errores con HTTPException consistente en backend
+    - Commits en español con conventional commits
+    - Ramas: main, dev, feature/nombre-feature
+
+  CRÍTICO — RLS y supabase-py:
+    - supabase-py 2.7.1 NO hace bypass de RLS aunque uses SUPABASE_SERVICE_KEY
+    - El backend usa service_role pero PostgREST evalúa RLS como rol "anon"
+    - Solución: TODA política RLS de INSERT/UPDATE/DELETE debe usar WITH CHECK (true)
+    - El backend ya valida autenticación en get_current_user(), así que es seguro
+    - Tablas ya corregidas: posts, comments, likes (25/05/2026)
+    - Tablas que pueden fallar: profiles, pets, vet_visits, pet_events, lost_pets,
+      adoptions, instapet_posts, instapet_followers, instapet_milestones
+    - Si aparece error 42501 en una tabla nueva, aplicar la misma solución
+
+  Storage de Supabase:
+    - Bucket "pets" creado (25/05/2026) para fotos de posts y mascotas
+    - Endpoint: POST /api/v1/pets/upload-photo (multipart/form-data, campo "file")
+    - Retorna {"url": "https://..."} — URL pública para guardar en photo_url
+
+rules:
+  proposal:
+    - Siempre incluir motivación y objetivo claro
+    - Listar los archivos que se van a crear o modificar
+    - Máximo 300 palabras
+  design:
+    - Justificar decisiones técnicas
+    - Incluir alternativas consideradas
+  tasks:
+    - Cada tarea debe ser completable en menos de 2 horas
+    - Agrupar tareas por módulo (backend, frontend, docs)
+    - Indicar dependencias entre tareas
+  specs:
+    - Basarse siempre en docs/openapi.yaml como fuente de verdad
+    - Incluir ejemplos de request y response
