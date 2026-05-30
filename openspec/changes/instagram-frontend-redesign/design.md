@@ -1,78 +1,141 @@
 ## Context
 
-PetConnect es una plataforma web y Android para dueños de mascotas. El stack frontend usa React 18 + Vite + TypeScript + Tailwind CSS v3 + shadcn/ui. La versión actual carece de una identidad visual cohesiva y los patrones de navegación no siguen los estándares de apps sociales modernas. Los usuarios objetivo están familiarizados con experiencias tipo Instagram: feed visual centrado en fotos, navegación inferior con iconos, y acciones principales vía FAB. Este rediseño adapta esos patrones al dominio de mascotas sin modificar el backend.
+PetConnect es una plataforma web para dueños de mascotas (React 19 + Vite + TypeScript + Tailwind CSS v4 + shadcn/ui). El rediseño aplica una estética **"Playful Premium — Dark Mode + Glassmorphism + Acentos Cálidos"** inspirada en las directrices de los skills `design-taste-frontend`, `high-end-visual-design`, `redesign-existing-projects` y `frontend-design`.
+
+**Aesthetic direction elegida:** Ethereal Glass sobre fondo OLED negro, con acento naranja cálido (#F97316) y ámbar dorado (#F59E0B). Glassmorphism real (doble-bezel nesting) en cards, bottom nav tipo píldora flotante, tipografía Fredoka para display (personalidad mascotera) + Nunito para body. Paw prints decorativos conservados como textura sutil sobre fondo oscuro.
 
 ## Goals / Non-Goals
 
 **Goals:**
+- Modo oscuro completo con fondo #09090B (OLED black) y superficies glass (#18181B + backdrop-blur)
+- Acento primario naranja cálido #F97316 (reemplaza el fucsia #D946EF)
+- Acento secundario ámbar #F59E0B para medallas/destacados
 - Layout mobile-first con contenedor centrado a 430px de ancho máximo
-- Feed de posts con foto a ancho completo, avatar circular del dueño/mascota, botones de like y comentario, y contador de likes
-- Header minimalista con logo "PetConnect" en color primario #D946EF
-- FAB circular "+" en #D946EF abajo-derecha para crear nuevo post
-- Bottom nav flotante con íconos para Feed, Ranking, Perdidos y Mis Pets
-- Separar el ranking en su propia pantalla (sin widget en el home)
-- Consistencia visual: cards con rounded-xl + shadow-sm, fondo #F9FAFB, texto #111827, tipografía limpia con espaciado generoso
+- Feed de posts con foto a ancho completo, avatar circular, botones de like/comentario con lucide-react (sin emojis)
+- Cards con arquitectura doble-bezel: outer shell bg-white/3 + inner core bg-zinc-900/60 backdrop-blur-xl
+- Header minimalista glass con logo "PetConnect" en naranja
+- Bottom nav flotante tipo píldora (`rounded-full`) con glass y blur
+- FAB glass con glow naranja para crear nuevo post
+- Paw prints decorativos conservados con opacidad 3% en naranja sobre fondo negro
+- Skeleton loaders (pulso bg-zinc-800→zinc-700) en lugar de spinners circulares
+- Micro-interacciones: fade-up staggered, like bounce spring, FAB hover glow, nav active lift
 
 **Non-Goals:**
 - No se modifica la API ni el backend
-- No se rediseñan pantallas de login/registro, adopciones, ni InstaPet (solo se adaptan al nuevo layout global)
-- No se implementa infinite scroll (se mantiene paginación tradicional)
-- No se añaden animaciones complejas ni transiciones de navegación
+- No se rediseñan pantallas de login/registro (solo se adaptan al layout oscuro)
+- No se implementa infinite scroll
+- No se añaden animaciones complejas tipo GSAP/Framer Motion
 - No se cambia la lógica de autenticación ni el estado global (Zustand)
+- No se eliminan las patitas decorativas (requerimiento explícito del usuario)
 
 ## Decisions
 
-**1. Tailwind CSS theme extend vs CSS custom properties**
+### 1. Paleta de colores: dark mode + naranja en lugar de fucsia
 
-Decisión: Extender `tailwind.config.js` con los colores corporativos (`primary: #D946EF`, `background: #F9FAFB`, `foreground: #111827`) y definir `maxWidth: { mobile: '430px' }` en el theme.
+**Decisión:** Migrar de light mode con fucsia (#D946EF) a dark mode OLED (#09090B) con acento naranja (#F97316).
 
-Alternativa: Usar solo CSS custom properties en `index.css`.  
-Razón: Tailwind theme extend permite usar clases utilitarias como `text-primary`, `bg-background`, `max-w-mobile` en todo el proyecto sin repetir valores hex. Esto es más mantenible y alineado con el enfoque utility-first.
+```
+Paleta completa:
+  --color-background: #09090B       (OLED black)
+  --color-surface:    #18181B       (zinc-900, fondo de cards)
+  --color-primary:    #F97316       (naranja cálido, acento principal)
+  --color-primary-dark: #EA580C     (naranja oscuro, hover states)
+  --color-primary-light: #FED7AA    (naranja claro, badges/bg sutil)
+  --color-secondary:  #F59E0B       (ámbar dorado, medallas/destacados)
+  --color-secondary-light: #FEF3C7  (ámbar claro)
+  --color-accent:     #F59E0B       (igual que secondary)
+  --color-text:       #FAFAFA       (blanco roto, texto principal)
+  --color-text-muted: #A1A1AA       (zinc-400, texto secundario)
+  --color-success:    #10B981       (verde esmeralda)
+  --color-danger:     #EF4444       (rojo)
+  --color-warm:       #292524       (warm stone, fondos alternativos)
+  --font-display:     'Fredoka', sans-serif
+  --font-body:        'Nunito', sans-serif
+```
 
-**2. Layout: max-width container vs viewport completo**
+**Razón:** El fucsia sobre fondo blanco es la firma #1 del "AI slop aesthetic" según los skills de diseño. El naranja mantiene la calidez mascotera sin caer en el cliché. El dark mode da sensación premium y hace que las fotos de mascotas resalten más.
 
-Decisión: Contenedor `max-w-[430px] mx-auto` con fondo `#F9FAFB` que ocupe toda la pantalla en desktop. En mobile, el contenido tapa todo el viewport.
+### 2. Glassmorphism con doble-bezel (Doppelrand)
 
-Alternativa: Usar `max-w-screen-sm` (640px).  
-Razón: 430px es el ancho de un iPhone 14 Pro Max, el dispositivo más común entre usuarios de apps sociales. Un contenedor más estrecho da la sensación de "app nativa" incluso en desktop, mejorando la familiaridad para el usuario.
+**Decisión:** Todas las cards usan arquitectura de doble capa:
 
-**3. Bottom nav: fija vs parte del scroll**
+```html
+<!-- Outer shell -->
+<div class="bg-white/[0.03] rounded-[2rem] p-[1.5px]">
+  <!-- Inner core -->
+  <div class="bg-zinc-900/60 backdrop-blur-xl rounded-[calc(2rem-1.5px)] 
+              shadow-[inset_0_1px_1px_rgba(255,255,255,0.03)]">
+    <!-- contenido -->
+  </div>
+</div>
+```
 
-Decisión: Bottom nav flotante (`fixed bottom-4`, `rounded-2xl`, `shadow-lg`, fondo blanco, centrada horizontalmente) que se superpone al contenido con un margen inferior. El contenido del feed debe tener padding-bottom suficiente para no quedar oculto.
+**Razón:** El `high-end-visual-design` skill exige esta técnica para simular profundidad física (como vidrio montado en marco de aluminio). El hairline exterior (bg-white/3) crea el borde sutil sin usar borders genéricos.
 
-Alternativa: Nav fija pegada al borde inferior sin márgenes.  
-Razón: El diseño flotante con bordes redondeados y sombra es el estándar moderno de apps como Instagram. Da sensación de superposición elegante y deja espacio visual para el FAB.
+### 3. Bottom nav: píldora flotante en lugar de rectángulo
 
-**4. FAB position: esquina inferior derecha vs centrado**
+**Decisión:** `rounded-full` (píldora), `bg-zinc-900/80 backdrop-blur-2xl`, `border border-white/5`, sombra difusa `shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)]`.
 
-Decisión: FAB posicionado `fixed bottom-20 right-4` (o `right-[calc(50%-215px+1rem)]` para alinearse con el contenedor de 430px), circular de 56px, color `#D946EF`, con icono "+" blanco y sombra `shadow-lg`.
+**Razón:** El `design-taste-frontend` skill sugiere Mac OS Dock Magnification o Dynamic Island como referencias. La píldora flotante es más premium que un rectángulo pegado al borde y el `high-end-visual-design` skill lo llama "Fluid Island Nav".
 
-Alternativa: FAB centrado en la bottom nav.  
-Razón: La posición abajo-derecha es el estándar Material Design y de Instagram. No interfiere con la bottom nav centrada y es fácilmente alcanzable con el pulgar derecho.
+### 4. FAB con glow naranja
 
-**5. Post card: componente independiente vs inline**
+**Decisión:** `bg-zinc-900/80 backdrop-blur-xl`, `border border-white/10`, `shadow-[0_0_20px_rgba(249,115,22,0.3)]`, ícono Plus naranja `text-primary`. Hover intensifica el glow: `bg-orange-600/80 shadow-[0_0_30px_rgba(249,115,22,0.5)]`.
 
-Decisión: Componente `<PostCard />` autocontenido que recibe props del post (foto, avatar, nombre mascota, raza, likes, si el usuario ya dio like). Usa React Query para mutaciones de like y navegación programática para comentarios.
+**Razón:** El glow reemplaza el botón sólido fucsia. Es más sutil en reposo y más impactante en hover (efecto "activación"). El `design-taste-frontend` skill prohíbe glows genéricos pero permite glows funcionales con propósito.
 
-Alternativa: Renderizado inline en el feed sin abstracción.  
-Razón: Un componente reutilizable permite usar la misma card en feed global, perfil de mascota, y búsqueda sin duplicar código.
+### 5. Tipografía: mantener Fredoka + Nunito
 
-**6. Íconos: librería lucide-react**
+**Decisión:** Conservar Fredoka para display (tiene personalidad, no es Inter) y Nunito para body (redondeada, amigable). Añadir `tracking-tight` en headers y `leading-relaxed` en body. No usar Geist ni Satoshi.
 
-Decisión: Mantener `lucide-react` como librería de iconos (ya incluida en el proyecto vía shadcn/ui). Los iconos específicos son: `Heart` (like), `MessageCircle` (comentario), `Home` (feed), `Trophy` (ranking), `MapPin` (perdidos), `PawPrint` (mis pets), `Plus` (FAB).
+**Razón:** Aunque los skills recomiendan Geist/Satoshi/Cabinet Grotesk, Fredoka ya tiene carácter único y encaja con el tono mascotero. Cambiarla perdería identidad de marca. El `redesign-existing-projects` skill dice "work with existing stack".
 
-Alternativa: Usar emojis o SVG custom.  
-Razón: lucide-react ya está en el proyecto, tiene tree-shaking, y sus iconos son consistentes con el estilo visual limpio buscado.
+### 6. Íconos: lucide-react con stroke-width 1.5
+
+**Decisión:** lucide-react (ya en el proyecto vía shadcn/ui). Stroke-width consistente de 1.5 (más premium que el default 2.0). Íconos específicos: `Heart` (like, fill naranja cuando activo), `MessageCircle` (comentario), `Home`, `Trophy`, `MapPin`, `PawPrint`, `Plus`. Cero emojis en UI.
+
+**Razón:** El `redesign-existing-projects` skill explícitamente dice que lucide-react es "default AI icon choice" y sugiere Phosphor — pero lucide-react ya está integrado y cambiarlo sería refactor innecesario. Usar stroke-width 1.5 le da un look más refinado dentro del mismo set.
+
+### 7. Skeleton loaders en lugar de spinners
+
+**Decisión:** Para estados de carga, usar skeletons con animación de pulso (`bg-zinc-800 animate-pulse`) que imiten la forma del contenido real (card skeleton, avatar skeleton, text line skeleton). No usar spinners circulares genéricos.
+
+**Razón:** El `design-taste-frontend` skill (Rule 5) exige "Skeletal loaders matching layout sizes (avoid generic circular spinners)". Esto aplica a FeedPage, RankingPage, LostPetsPage y MyPetsPage.
+
+### 8. Paw prints: conservar pero adaptar
+
+**Decisión:** Mantener los paw prints decorativos (requerimiento del usuario en task 1.2), pero adaptados a dark mode: opacidad ultra-baja (3%), color naranja (#F97316) en lugar del fucsia actual. Usar `pointer-events-none fixed` para no interferir con la interacción.
+
+**Razón:** Las patitas son parte de la identidad PetConnect. El `high-end-visual-design` skill dice que texturas y grain deben ir en `fixed, pointer-events-none` pseudo-elementos. Reducir opacidad al 3% las hace textura ambiental, no distracción.
+
+### 9. Estados vacíos y de error
+
+**Decisión:** Cada página tendrá estados composed para:
+- **Empty:** Ilustración sutil + mensaje + CTA (ej: "Aún no hay posts. ¡Sé el primero!" con ícono PawPrint grande en zinc-800)
+- **Error:** Mensaje inline con ícono AlertCircle + botón de reintentar
+- **Loading:** Skeleton loader matching layout shape
+
+**Razón:** El `design-taste-frontend` skill Rule 5 exige implementar el ciclo completo: Loading, Empty, Error, Tactile Feedback.
 
 ## Risks / Trade-offs
 
-- **[Riesgo] El contenedor de 430px puede verse extraño en tablets** → Mitigación: En viewports > 430px se centra el contenido con fondo gris claro a los lados, similar a la versión web de Instagram.
-- **[Riesgo] El FAB puede solaparse con el último post** → Mitigación: Agregar `pb-24` al contenedor del feed para asegurar que el último elemento sea visible por encima del FAB y la bottom nav.
-- **[Riesgo] Eliminar el widget de ranking del home puede confundir a usuarios existentes** → Mitigación: El ranking es accesible con un solo tap desde la bottom nav (segundo ícono), más visible que antes.
-- **[Trade-off] La bottom nav flotante ocupa espacio vertical** → Aceptado: El diseño moderno prioriza la estética y usabilidad sobre el espacio de contenido. Las apps sociales exitosas hacen este mismo trade-off.
+- **[Riesgo] El dark mode puede no gustar a todos los usuarios** → Mitigación: Es una app de nicho (dueños de mascotas), no una red social masiva. El dark mode favorece la visualización de fotos.
+- **[Riesgo] El glassmorphism puede tener mal rendimiento en dispositivos viejos** → Mitigación: `backdrop-blur` solo en elementos fixed/sticky (cards no usan blur, solo bg semitransparente).
+- **[Riesgo] Migrar de fucsia a naranja puede confundir a usuarios existentes** → Mitigación: El cambio es solo estético, no funcional. La estructura de navegación se mantiene.
+- **[Trade-off] El dark mode hace ciertos textos menos legibles** → Aceptado: Se usa contraste WCAG AA (texto #FAFAFA sobre fondo #09090B = ratio 15.3:1).
 
-## Open Questions
+## Dependencies Check
 
-- ¿Se debe ocultar la bottom nav al hacer scroll hacia abajo (como Instagram)? → Decidir durante implementación según feedback visual.
-- ¿La pantalla de "Mis Pets" debe mostrar lista o grid de mascotas? → Grid de 2 columnas con cards pequeñas, consistente con el diseño mobile-first.
-- ¿El header debe mostrar avatar del usuario logueado además del logo? → Por simplicidad inicial, solo mostrar logo "PetConnect". Se puede iterar después.
+- `lucide-react` — requerido para íconos (Heart, MessageCircle, Home, Trophy, MapPin, PawPrint, Plus). Debe estar en `package.json`.
+- `@tanstack/react-query` — ya en uso para data fetching. Sin cambios.
+- `zustand` — ya en uso para auth state. Sin cambios.
+- `react-router-dom` — ya en uso. Sin cambios.
+- `tailwindcss` v4 — ya configurado con `@theme` en `index.css`. Sin cambios de versión.
+
+## Specs
+
+See `specs/` directory for detailed capability specs:
+- `instagram-feed-ui/spec.md`
+- `bottom-navigation/spec.md`
+- `create-post-fab/spec.md`
+- `global-theme/spec.md`

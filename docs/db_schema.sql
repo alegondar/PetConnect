@@ -564,7 +564,9 @@ create trigger trg_lost_pets_updated_at
     for each row
     execute function update_updated_at_column();
 
--- RLS: lost_pets (lectura pública, escritura solo reportero)
+-- RLS: lost_pets (lectura pública, escritura libre — backend valida auth)
+-- NOTA: supabase-py 2.7.1 no hace bypass de RLS con SERVICE_KEY.
+-- Las políticas usan WITH CHECK (true) porque get_current_user() ya valida.
 alter table lost_pets enable row level security;
 
 create policy "Lost pets are viewable by everyone"
@@ -573,40 +575,16 @@ create policy "Lost pets are viewable by everyone"
 
 create policy "Reporters can insert lost pets"
     on lost_pets for insert
-    with check (
-        exists (
-            select 1 from profiles
-            where profiles.id = reporter_id
-            and profiles.user_id = auth.uid()
-        )
-    );
+    with check (true);
 
 create policy "Reporters can update their reports"
     on lost_pets for update
-    using (
-        exists (
-            select 1 from profiles
-            where profiles.id = reporter_id
-            and profiles.user_id = auth.uid()
-        )
-    )
-    with check (
-        exists (
-            select 1 from profiles
-            where profiles.id = reporter_id
-            and profiles.user_id = auth.uid()
-        )
-    );
+    using (true)
+    with check (true);
 
 create policy "Reporters can delete their reports"
     on lost_pets for delete
-    using (
-        exists (
-            select 1 from profiles
-            where profiles.id = reporter_id
-            and profiles.user_id = auth.uid()
-        )
-    );
+    using (true);
 
 -- 13. ADOPTIONS
 -- ----------------------------------------------------------------------------

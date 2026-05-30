@@ -2,7 +2,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom'
 
 const tabs = [
   { to: '/feed', label: '🐾 Feed' },
-  { to: '/ranking', label: '🏆 Ranking' },
+  { to: '/pet-friendly', label: 'PetFriendly' },
   { to: '/lost-pets', label: '🔍 Perdidos' },
   { to: '/my-pets', label: '🐶 Mis Pets' },
 ]

@@ -7,12 +7,13 @@ import ProtectedRoute from './components/ProtectedRoute'
 const LoginPage = lazy(() => import('./pages/LoginPage'))
 const RegisterPage = lazy(() => import('./pages/RegisterPage'))
 const FeedPage = lazy(() => import('./pages/FeedPage'))
-const RankingPage = lazy(() => import('./pages/RankingPage'))
+const PetFriendlyPage = lazy(() => import('./pages/PetFriendlyPage'))
 const MyPetsPage = lazy(() => import('./pages/MyPetsPage'))
 const PetDetailPage = lazy(() => import('./pages/PetDetailPage'))
 const InstaPetPage = lazy(() => import('./pages/InstaPetPage'))
 const FollowingPage = lazy(() => import('./pages/FollowingPage'))
 const LostPetsPage = lazy(() => import('./pages/LostPetsPage'))
+const LostPetDetailPage = lazy(() => import('./pages/LostPetDetailPage'))
 const AdoptionsPage = lazy(() => import('./pages/AdoptionsPage'))
 
 const queryClient = new QueryClient({
@@ -48,9 +49,13 @@ export default function App() {
               />
               <Route
                 path="/ranking"
+                element={<Navigate to="/pet-friendly" replace />}
+              />
+              <Route
+                path="/pet-friendly"
                 element={
                   <ProtectedRoute>
-                    <RankingPage />
+                    <PetFriendlyPage />
                   </ProtectedRoute>
                 }
               />
@@ -83,6 +88,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <FollowingPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/lost-pets/:id"
+                element={
+                  <ProtectedRoute>
+                    <LostPetDetailPage />
                   </ProtectedRoute>
                 }
               />
