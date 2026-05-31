@@ -799,6 +799,301 @@ paths:
         "422":
           $ref: "#/components/responses/ValidationError"
 
+  # =========================================================================
+  # SERVICES (MANADA LIBRE)
+  # =========================================================================
+  /services/offers:
+    get:
+      tags: [Services]
+      summary: Listar ofertas de servicio
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [paseador, cuidador, veterinario, peluqueria]
+          description: Filtrar por tipo de servicio
+        - name: location
+          in: query
+          schema:
+            type: string
+          description: Buscar por ubicación (ILIKE)
+      responses:
+        "200":
+          description: Lista paginada de ofertas
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedServiceOffers"
+    post:
+      tags: [Services]
+      summary: Publicar una oferta de servicio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateOfferRequest"
+      responses:
+        "201":
+          description: Oferta creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceOffer"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /services/offers/{offer_id}:
+    get:
+      tags: [Services]
+      summary: Obtener detalle de oferta
+      parameters:
+        - name: offer_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Oferta con datos del provider
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceOfferDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Services]
+      summary: Actualizar oferta (solo owner)
+      parameters:
+        - name: offer_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateOfferRequest"
+      responses:
+        "200":
+          description: Oferta actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceOffer"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Services]
+      summary: Eliminar oferta (solo owner)
+      parameters:
+        - name: offer_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Oferta eliminada
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /services/offers/{offer_id}/contact:
+    post:
+      tags: [Services]
+      summary: Contactar al proveedor de una oferta
+      parameters:
+        - name: offer_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactMessageRequest"
+      responses:
+        "201":
+          description: Mensaje enviado
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /services/requests:
+    get:
+      tags: [Services]
+      summary: Listar solicitudes de servicio
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [paseador, cuidador, veterinario, peluqueria]
+          description: Filtrar por tipo de servicio
+      responses:
+        "200":
+          description: Lista paginada de solicitudes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedServiceRequests"
+    post:
+      tags: [Services]
+      summary: Publicar una solicitud de servicio
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRequestRequest"
+      responses:
+        "201":
+          description: Solicitud creada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /services/requests/{request_id}:
+    get:
+      tags: [Services]
+      summary: Obtener detalle de solicitud
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Solicitud con datos del requester y mascota
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequestDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [Services]
+      summary: Actualizar solicitud (solo owner)
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateRequestRequest"
+      responses:
+        "200":
+          description: Solicitud actualizada
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [Services]
+      summary: Eliminar solicitud (solo owner)
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "204":
+          description: Solicitud eliminada
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /services/requests/{request_id}/contact:
+    post:
+      tags: [Services]
+      summary: Contactar al autor de una solicitud
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactMessageRequest"
+      responses:
+        "201":
+          description: Mensaje enviado
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /services/my-contacts:
+    get:
+      tags: [Services]
+      summary: Listar mensajes recibidos del usuario autenticado
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Limit"
+      responses:
+        "200":
+          description: Lista paginada de mensajes recibidos
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaginatedServiceContacts"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
 # ============================================================================
 # COMPONENTS
 # ============================================================================
@@ -1765,3 +2060,333 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/InstaPetMilestone"
+
+    # --- Services (Manada Libre) ---
+    ServiceOffer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        provider_id:
+          type: string
+          format: uuid
+        service_type:
+          type: string
+          enum: [paseador, cuidador, veterinario, peluqueria]
+        title:
+          type: string
+        description:
+          type: string
+        price_from:
+          type: number
+          nullable: true
+        price_to:
+          type: number
+          nullable: true
+        price_unit:
+          type: string
+        location:
+          type: string
+        lat:
+          type: number
+          nullable: true
+        lng:
+          type: number
+          nullable: true
+        available_days:
+          type: array
+          items:
+            type: string
+        photo_url:
+          type: string
+          format: uri
+          nullable: true
+        status:
+          type: string
+          enum: [activo, pausado, cerrado]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        provider:
+          $ref: "#/components/schemas/Profile"
+
+    ServiceOfferDetail:
+      allOf:
+        - $ref: "#/components/schemas/ServiceOffer"
+
+    CreateOfferRequest:
+      type: object
+      properties:
+        service_type:
+          type: string
+          enum: [paseador, cuidador, veterinario, peluqueria]
+        title:
+          type: string
+          minLength: 5
+          maxLength: 100
+        description:
+          type: string
+          minLength: 20
+          maxLength: 1000
+        price_from:
+          type: number
+        price_to:
+          type: number
+        price_unit:
+          type: string
+          enum: [por visita, por hora, por día]
+        location:
+          type: string
+          minLength: 3
+        lat:
+          type: number
+        lng:
+          type: number
+        available_days:
+          type: array
+          items:
+            type: string
+        photo_url:
+          type: string
+          format: uri
+      required: [service_type, title, description, location]
+
+    UpdateOfferRequest:
+      type: object
+      properties:
+        service_type:
+          type: string
+          enum: [paseador, cuidador, veterinario, peluqueria]
+        title:
+          type: string
+        description:
+          type: string
+        price_from:
+          type: number
+          nullable: true
+        price_to:
+          type: number
+          nullable: true
+        price_unit:
+          type: string
+          nullable: true
+        location:
+          type: string
+        lat:
+          type: number
+          nullable: true
+        lng:
+          type: number
+          nullable: true
+        available_days:
+          type: array
+          items:
+            type: string
+        photo_url:
+          type: string
+          format: uri
+          nullable: true
+        status:
+          type: string
+          enum: [activo, pausado, cerrado]
+
+    ServiceRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        requester_id:
+          type: string
+          format: uuid
+        service_type:
+          type: string
+          enum: [paseador, cuidador, veterinario, peluqueria]
+        title:
+          type: string
+        description:
+          type: string
+        pet_id:
+          type: string
+          format: uuid
+          nullable: true
+        frequency_per_week:
+          type: integer
+          nullable: true
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        location:
+          type: string
+        lat:
+          type: number
+          nullable: true
+        lng:
+          type: number
+          nullable: true
+        status:
+          type: string
+          enum: [activo, pausado, cerrado]
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        requester:
+          $ref: "#/components/schemas/Profile"
+        pet:
+          $ref: "#/components/schemas/Pet"
+
+    ServiceRequestDetail:
+      allOf:
+        - $ref: "#/components/schemas/ServiceRequest"
+
+    CreateRequestRequest:
+      type: object
+      properties:
+        service_type:
+          type: string
+          enum: [paseador, cuidador, veterinario, peluqueria]
+        title:
+          type: string
+          minLength: 5
+          maxLength: 100
+        description:
+          type: string
+          minLength: 20
+          maxLength: 1000
+        pet_id:
+          type: string
+          format: uuid
+        frequency_per_week:
+          type: integer
+          minimum: 1
+          maximum: 21
+        start_date:
+          type: string
+          format: date
+        end_date:
+          type: string
+          format: date
+        location:
+          type: string
+          minLength: 3
+        lat:
+          type: number
+        lng:
+          type: number
+      required: [service_type, title, description, location]
+
+    UpdateRequestRequest:
+      type: object
+      properties:
+        service_type:
+          type: string
+          enum: [paseador, cuidador, veterinario, peluqueria]
+        title:
+          type: string
+        description:
+          type: string
+        pet_id:
+          type: string
+          format: uuid
+          nullable: true
+        frequency_per_week:
+          type: integer
+          nullable: true
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        location:
+          type: string
+        lat:
+          type: number
+          nullable: true
+        lng:
+          type: number
+          nullable: true
+        status:
+          type: string
+          enum: [activo, pausado, cerrado]
+
+    ContactMessageRequest:
+      type: object
+      properties:
+        message:
+          type: string
+          minLength: 10
+          maxLength: 500
+      required: [message]
+
+    ServiceContact:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        request_id:
+          type: string
+          format: uuid
+          nullable: true
+        offer_id:
+          type: string
+          format: uuid
+          nullable: true
+        sender_id:
+          type: string
+          format: uuid
+        receiver_id:
+          type: string
+          format: uuid
+        message:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        sender:
+          $ref: "#/components/schemas/Profile"
+
+    PaginatedServiceOffers:
+      allOf:
+        - $ref: "#/components/schemas/PaginatedResponse"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ServiceOffer"
+
+    PaginatedServiceRequests:
+      allOf:
+        - $ref: "#/components/schemas/PaginatedResponse"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ServiceRequest"
+
+    PaginatedServiceContacts:
+      allOf:
+        - $ref: "#/components/schemas/PaginatedResponse"
+        - type: object
+          properties:
+            items:
+              type: array
+              items:
+                $ref: "#/components/schemas/ServiceContact"

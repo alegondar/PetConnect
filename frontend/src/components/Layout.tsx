@@ -6,6 +6,7 @@ import NotificationsDropdown from './NotificationsDropdown'
 const tabs = [
   { to: '/feed', label: '🐾 Feed' },
   { to: '/pet-friendly', label: 'PetFriendly' },
+  { to: '/services', label: '🐕 Servicios' },
   { to: '/lost-pets', label: '🔍 Perdidos' },
   { to: '/my-pets', label: '🐶 Mis Pets' },
 ]

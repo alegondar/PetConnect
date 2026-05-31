@@ -4,9 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate } from 'react-router-dom'
 import { ShieldAlert, ChevronRight, BellOff, Eye, EyeOff, X } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query'
 import { useAuthStore } from '../stores/authStore'
-import { authApi } from '../api/endpoints'
+import { authApi, servicesApi } from '../api/endpoints'
 import AvatarUpload from '../components/AvatarUpload'
 
 const profileSchema = z.object({
@@ -51,6 +51,35 @@ export default function SettingsPage() {
   const [deleteEmail, setDeleteEmail] = useState('')
   const [deleting, setDeleting] = useState(false)
   const [loadingEmail, setLoadingEmail] = useState(true)
+
+  // Mis servicios
+  const { data: myRequests } = useQuery({
+    queryKey: ['my-services-requests', profile?.id],
+    queryFn: async () => {
+      if (!profile) return { items: [] }
+      const res = await servicesApi.listRequests({ page: 1, limit: 50 })
+      return res.data
+    },
+    enabled: !!profile,
+  })
+  const { data: myOffers } = useQuery({
+    queryKey: ['my-services-offers', profile?.id],
+    queryFn: async () => {
+      if (!profile) return { items: [] }
+      const res = await servicesApi.listOffers({ page: 1, limit: 50 })
+      return res.data
+    },
+    enabled: !!profile,
+  })
+  const { data: myContacts } = useQuery({
+    queryKey: ['my-contacts', profile?.id],
+    queryFn: async () => {
+      if (!profile) return { items: [] }
+      const res = await servicesApi.myContacts({ page: 1, limit: 20 })
+      return res.data
+    },
+    enabled: !!profile,
+  })
 
   useEffect(() => {
     authApi.getMe().then((res) => {
@@ -345,6 +374,61 @@ export default function SettingsPage() {
               <span className="text-white/80 text-sm font-medium">Cerrar sesión en todos los dispositivos</span>
               <ChevronRight className="w-5 h-5 text-gray-400" />
             </button>
+          </div>
+        </section>
+
+        {/* Sección Mis Servicios */}
+        <section className={`${sectionClass} mb-5`}>
+          <h3 className="text-lg font-semibold text-primary mb-4">🐕 Mis servicios</h3>
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-semibold text-white/70 mb-2">
+                Mis solicitudes ({myRequests?.items?.length || 0})
+              </h4>
+              {myRequests?.items?.length > 0 ? (
+                myRequests.items.slice(0, 3).map((r: any) => (
+                  <div key={r.id} className="bg-white/5 rounded-lg px-3 py-2 mb-1 text-sm text-white/60">
+                    {r.title} · <span className="text-white/40">{r.service_type}</span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-white/30 text-sm">No publicaste solicitudes</p>
+              )}
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-white/70 mb-2">
+                Mis ofertas ({myOffers?.items?.length || 0})
+              </h4>
+              {myOffers?.items?.length > 0 ? (
+                myOffers.items.slice(0, 3).map((o: any) => (
+                  <div key={o.id} className="bg-white/5 rounded-lg px-3 py-2 mb-1 text-sm text-white/60">
+                    {o.title} · <span className="text-white/40">{o.service_type}</span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-white/30 text-sm">No publicaste ofertas</p>
+              )}
+            </div>
+            <div>
+              <h4 className="text-sm font-semibold text-white/70 mb-2">
+                Mensajes recibidos ({myContacts?.items?.length || 0})
+              </h4>
+              {myContacts?.items?.length > 0 ? (
+                myContacts.items.slice(0, 3).map((c: any) => (
+                  <div key={c.id} className="bg-white/5 rounded-lg px-3 py-2 mb-1 text-sm text-white/60">
+                    <span className="text-white/40">@{c.sender?.username || '?'}:</span> {c.message.slice(0, 60)}
+                  </div>
+                ))
+              ) : (
+                <p className="text-white/30 text-sm">No tenés mensajes</p>
+              )}
+            </div>
+            <a
+              href="/services"
+              className="text-sm text-primary hover:text-primary/80 font-medium"
+            >
+              Ver todos en Manada Libre →
+            </a>
           </div>
         </section>
 

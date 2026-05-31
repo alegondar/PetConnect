@@ -133,3 +133,32 @@ export const notificationsApi = {
   list: () => api.get('/notifications'),
   markRead: () => api.patch('/notifications/read'),
 }
+
+export const servicesApi = {
+  // Offers
+  listOffers: (params?: Record<string, string | number>) =>
+    api.get('/services/offers', { params }),
+  getOffer: (id: string) => api.get(`/services/offers/${id}`),
+  createOffer: (data: Record<string, unknown>) =>
+    api.post('/services/offers', data),
+  updateOffer: (id: string, data: Record<string, unknown>) =>
+    api.put(`/services/offers/${id}`, data),
+  deleteOffer: (id: string) => api.delete(`/services/offers/${id}`),
+  // Requests
+  listRequests: (params?: Record<string, string | number>) =>
+    api.get('/services/requests', { params }),
+  getRequest: (id: string) => api.get(`/services/requests/${id}`),
+  createRequest: (data: Record<string, unknown>) =>
+    api.post('/services/requests', data),
+  updateRequest: (id: string, data: Record<string, unknown>) =>
+    api.put(`/services/requests/${id}`, data),
+  deleteRequest: (id: string) => api.delete(`/services/requests/${id}`),
+  // Contact
+  contactRequest: (id: string, message: string) =>
+    api.post(`/services/requests/${id}/contact`, { message }),
+  contactOffer: (id: string, message: string) =>
+    api.post(`/services/offers/${id}/contact`, { message }),
+  // My contacts
+  myContacts: (params?: Record<string, number>) =>
+    api.get('/services/my-contacts', { params }),
+}

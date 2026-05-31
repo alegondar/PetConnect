@@ -20,6 +20,8 @@ const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
 const UserProfilePage = lazy(() => import('./pages/UserProfilePage'))
 const SearchUsersPage = lazy(() => import('./pages/SearchUsersPage'))
+const ServicesPage = lazy(() => import('./pages/ServicesPage'))
+const ServiceDetailPage = lazy(() => import('./pages/ServiceDetailPage'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -133,6 +135,30 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <SearchUsersPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/services"
+                element={
+                  <ProtectedRoute>
+                    <ServicesPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/services/requests/:requestId"
+                element={
+                  <ProtectedRoute>
+                    <ServiceDetailPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/services/offers/:offerId"
+                element={
+                  <ProtectedRoute>
+                    <ServiceDetailPage />
                   </ProtectedRoute>
                 }
               />
