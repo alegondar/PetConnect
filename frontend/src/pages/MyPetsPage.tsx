@@ -11,7 +11,7 @@ export default function MyPetsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ['my-pets'],
-    queryFn: async () => { const res = await petsApi.list({ page: 1, limit: 100 }); return res.data },
+    queryFn: async () => { const res = await petsApi.myPets({ page: 1, limit: 100 }); return res.data },
   })
 
   const deleteMut = useMutation({

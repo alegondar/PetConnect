@@ -68,6 +68,31 @@ petsRoutes.get("/pets", async (c) => {
   });
 });
 
+petsRoutes.get("/my-pets", authMiddleware, async (c) => {
+  const userId = c.get("userId");
+  const page = Number(c.req.query("page")) || 1;
+  const limit = Math.min(Number(c.req.query("limit")) || 20, 100);
+
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  const { data, count, error } = await supabaseAdmin
+    .from("pets")
+    .select("*", { count: "exact", head: false })
+    .eq("owner_id", userId)
+    .order("created_at", { ascending: false })
+    .range(from, to);
+
+  if (error) return c.json({ detail: error.message }, 400);
+
+  return c.json({
+    items: data,
+    total: count ?? 0,
+    page,
+    pages: Math.ceil((count ?? 0) / limit),
+  });
+});
+
 petsRoutes.post(
   "/pets",
   authMiddleware,

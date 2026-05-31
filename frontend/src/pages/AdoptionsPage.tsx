@@ -74,7 +74,7 @@ export default function AdoptionsPage() {
 function AdoptionForm({ onClose }: { onClose: () => void }) {
   const [petId, setPetId] = useState('')
   const [desc, setDesc] = useState('')
-  const { data: petsData } = useQuery({ queryKey: ['my-pets'], queryFn: async () => { const res = await petsApi.list({ page: 1, limit: 100 }); return res.data } })
+  const { data: petsData } = useQuery({ queryKey: ['my-pets'], queryFn: async () => { const res = await petsApi.myPets({ page: 1, limit: 100 }); return res.data } })
   const createMut = useMutation({ mutationFn: () => communityApi.createAdoption({ pet_id: petId, description: desc || undefined }), onSuccess: onClose })
 
   return (

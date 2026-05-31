@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate } from 'react-router-dom'
 import { ShieldAlert, ChevronRight, BellOff, Eye, EyeOff, X } from 'lucide-react'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../stores/authStore'
 import { authApi } from '../api/endpoints'
 import AvatarUpload from '../components/AvatarUpload'
@@ -30,6 +31,7 @@ const passwordSchema = z.object({
 
 export default function SettingsPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const profile = useAuthStore((s) => s.profile)
   const setProfile = useAuthStore((s) => s.setProfile)
   const logoutStore = useAuthStore((s) => s.logout)
@@ -131,6 +133,7 @@ export default function SettingsPage() {
   }
 
   const handleLogout = () => {
+    queryClient.clear()
     logoutStore()
     navigate('/login')
   }

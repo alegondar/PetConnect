@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { Link, useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuthStore } from '../stores/authStore'
 
 const schema = z.object({
@@ -14,6 +15,7 @@ type FormData = z.infer<typeof schema>
 
 export default function RegisterPage() {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const registerUser = useAuthStore((s) => s.register)
   const token = useAuthStore((s) => s.token)
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -27,6 +29,7 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: FormData) => {
     try {
+      queryClient.clear()
       await registerUser(data.email, data.password, data.username)
       navigate('/feed')
     } catch {

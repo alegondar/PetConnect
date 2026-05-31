@@ -1,21 +1,24 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { feedApi, petsApi, instapetApi } from '../api/endpoints'
+import { feedApi, petsApi, instapetApi, usersApi } from '../api/endpoints'
+import { useAuthStore } from '../stores/authStore'
 import PostCard from '../components/PostCard'
 import CreatePostModal from '../components/CreatePostModal'
 
 function PetStories() {
+  const currentProfile = useAuthStore((s) => s.profile)
+
   const { data: myPets } = useQuery({
     queryKey: ['my-pets-stories'],
     queryFn: async () => {
-      const res = await petsApi.list({ page: 1, limit: 50 })
+      const res = await petsApi.myPets({ page: 1, limit: 50 })
       return res.data
     },
     staleTime: 120_000,
   })
 
-  const { data: following } = useQuery({
+  const { data: followingPets } = useQuery({
     queryKey: ['following-pets-stories'],
     queryFn: async () => {
       const res = await instapetApi.listFollowing({ page: 1, limit: 50 })
@@ -24,35 +27,57 @@ function PetStories() {
     staleTime: 120_000,
   })
 
-  const pets = [
-    ...(myPets?.items || []),
-    ...(following?.items || []),
+  const { data: followingUsers } = useQuery({
+    queryKey: ['following-users-stories', currentProfile?.id],
+    queryFn: async () => {
+      if (!currentProfile) return { items: [] }
+      const res = await usersApi.getFollowing(currentProfile.id, { limit: 50 })
+      return res.data as { items: { id: string; username: string; full_name: string | null; avatar_url: string | null; is_following: boolean }[] }
+    },
+    staleTime: 120_000,
+    enabled: !!currentProfile,
+  })
+
+  const stories = [
+    ...(myPets?.items || []).map((p: any) => ({ ...p, type: 'pet' as const })),
+    ...((followingPets as { items: any[] })?.items || []).map((fp: any) => ({
+      id: fp.pet_id,
+      name: fp.pet_name,
+      photo_url: fp.pet_photo_url,
+      type: 'instapet-following' as const,
+    })),
+    ...(followingUsers?.items || []).map((u: any) => ({
+      id: u.id,
+      name: u.username,
+      photo_url: u.avatar_url,
+      type: 'user' as const,
+    })),
   ]
 
   return (
     <div className="mb-5">
       <div className="flex gap-4 overflow-x-auto pb-3 scrollbar-none">
-        {pets.map((pet: any) => (
+        {stories.map((story: any) => (
           <a
-            key={pet.id}
-            href={`/instapet/${pet.id}`}
+            key={`${story.type}-${story.id}`}
+            href={story.type === 'user' ? `/profile/${story.id}` : `/instapet/${story.id}`}
             className="flex flex-col items-center gap-1 flex-shrink-0"
           >
             <div className="w-16 h-16 rounded-full p-0.5 bg-gradient-to-tr from-primary to-accent">
               <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
-                {pet.photo_url ? (
+                {story.photo_url ? (
                   <img
-                    src={pet.photo_url}
-                    alt={pet.name}
+                    src={story.photo_url}
+                    alt={story.name}
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-2xl">🐾</span>
+                  <span className="text-2xl">{story.type === 'user' ? '👤' : '🐾'}</span>
                 )}
               </div>
             </div>
             <p className="text-[10px] font-medium text-text-muted text-center leading-tight max-w-[64px] truncate">
-              {pet.name}
+              {story.type === 'user' ? `@${story.name}` : story.name}
             </p>
           </a>
         ))}

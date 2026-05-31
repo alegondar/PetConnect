@@ -25,6 +25,8 @@ export const authApi = {
 export const petsApi = {
   list: (params?: Record<string, string | number>) =>
     api.get('/pets', { params }),
+  myPets: (params?: Record<string, number>) =>
+    api.get('/my-pets', { params }),
   get: (petId: string) => api.get(`/pets/${petId}`),
   create: (data: Record<string, unknown>) => api.post('/pets', data),
   update: (petId: string, data: Record<string, unknown>) =>

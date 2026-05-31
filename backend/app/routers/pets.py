@@ -39,6 +39,15 @@ async def list_pets(
     return await pet_service.list_pets(page, limit, species, owner_id)
 
 
+@router.get("/my-pets")
+async def list_my_pets(
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+    user: dict = Depends(get_current_user),
+):
+    return await pet_service.list_pets(page, limit, None, user["id"])
+
+
 @router.get("/{pet_id}", response_model=Pet)
 async def get_pet(pet_id: UUID):
     return await pet_service.get_pet(pet_id)
