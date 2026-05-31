@@ -10,6 +10,8 @@ import { rankingRoutes } from "./routes/ranking.js";
 import { communityRoutes } from "./routes/community.js";
 import { instapetRoutes } from "./routes/instapet.js";
 import { petfriendlyRoutes } from "./routes/petfriendly.js";
+import { usersRoutes } from "./routes/users.js";
+import { notificationsRoutes } from "./routes/notifications.js";
 
 const app = new Hono();
 
@@ -39,6 +41,8 @@ app.route("/api/v1", rankingRoutes);
 app.route("/api/v1", communityRoutes);
 app.route("/api/v1", instapetRoutes);
 app.route("/api/v1", petfriendlyRoutes);
+app.route("/api/v1", usersRoutes);
+app.route("/api/v1", notificationsRoutes);
 
 app.get("/", (c) => c.json({ message: "PetConnect API is running" }));
 

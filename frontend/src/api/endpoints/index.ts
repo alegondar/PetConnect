@@ -52,7 +52,7 @@ export const petsApi = {
 }
 
 export const feedApi = {
-  list: (params?: Record<string, number>) =>
+  list: (params?: Record<string, number | string>) =>
     api.get('/feed', { params }),
   get: (postId: string) => api.get(`/feed/${postId}`),
   create: (data: { pet_id: string; content?: string; photo_url?: string }) =>
@@ -112,4 +112,22 @@ export const instapetApi = {
     api.get(`/pets/${petId}/milestones`, { params }),
   createMilestone: (petId: string, data: Record<string, unknown>) =>
     api.post(`/pets/${petId}/milestones`, data),
+}
+
+export const usersApi = {
+  getProfile: (userId: string) => api.get(`/users/${userId}`),
+  getUserPosts: (userId: string, params?: Record<string, number>) =>
+    api.get(`/users/${userId}/posts`, { params }),
+  getFollowers: (userId: string, params?: Record<string, number>) =>
+    api.get(`/users/${userId}/followers`, { params }),
+  getFollowing: (userId: string, params?: Record<string, number>) =>
+    api.get(`/users/${userId}/following`, { params }),
+  follow: (userId: string) => api.post(`/users/${userId}/follow`),
+  unfollow: (userId: string) => api.delete(`/users/${userId}/follow`),
+  search: (q: string, limit = 10) => api.get('/users', { params: { q, limit } }),
+}
+
+export const notificationsApi = {
+  list: () => api.get('/notifications'),
+  markRead: () => api.patch('/notifications/read'),
 }

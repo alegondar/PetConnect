@@ -1,11 +1,15 @@
-import { useParams } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { instapetApi, petsApi } from '../api/endpoints'
+import { instapetApi, petsApi, usersApi } from '../api/endpoints'
+import { useAuthStore } from '../stores/authStore'
 import { useState } from 'react'
 
 export default function InstaPetPage() {
   const { petId } = useParams<{ petId: string }>()
   const queryClient = useQueryClient()
+  const currentProfile = useAuthStore((s) => s.profile)
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [isFollowingOwner, setIsFollowingOwner] = useState(false)
 
   const { data: pet } = useQuery({
     queryKey: ['pet', petId],
@@ -21,7 +25,7 @@ export default function InstaPetPage() {
 
   const { data: followers } = useQuery({
     queryKey: ['followers', petId],
-    queryFn: async () => { const res = await instapetApi.listFollowers(petId!, { page: 1, limit: 1 }); return res.data },
+    queryFn: async () => { const res = await instapetApi.listFollowers(petId!, { page: 1, limit: 100 }); return res.data },
     enabled: !!petId,
   })
 
@@ -31,9 +35,39 @@ export default function InstaPetPage() {
     enabled: !!petId,
   })
 
+  useQuery({
+    queryKey: ['pet-follow-state', petId],
+    queryFn: async () => {
+      const res = await instapetApi.listFollowers(petId!, { page: 1, limit: 100 })
+      const items = (res.data as { items: { follower_id: string }[] }).items ?? []
+      const following = items.some((f: { follower_id: string }) => f.follower_id === currentProfile?.id)
+      setIsFollowing(following)
+      return following
+    },
+    enabled: !!petId && !!currentProfile,
+  })
+
+  useQuery({
+    queryKey: ['owner-follow-state', pet?.owner_id],
+    queryFn: async () => {
+      if (!pet?.owner_id || !currentProfile) return false
+      try {
+        const res = await usersApi.getProfile(pet.owner_id)
+        const profile = res.data as { is_following: boolean }
+        setIsFollowingOwner(profile.is_following)
+        return profile.is_following
+      } catch {
+        return false
+      }
+    },
+    enabled: !!pet?.owner_id && !!currentProfile,
+  })
+
   const followMut = useMutation({
-    mutationFn: () => instapetApi.follow(petId!),
+    mutationFn: () => isFollowing ? instapetApi.unfollow(petId!) : instapetApi.follow(petId!),
+    onMutate: () => setIsFollowing(!isFollowing),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['followers', petId] }),
+    onError: () => setIsFollowing(isFollowing),
   })
 
   const [showPost, setShowPost] = useState(false)
@@ -54,9 +88,27 @@ export default function InstaPetPage() {
         <p className="text-sm mt-1 font-semibold" style={{ fontFamily: "'Fredoka', sans-serif" }}>
           {followers?.total || 0} seguidores
         </p>
-        <button onClick={() => followMut.mutate()} className="btn-primary mt-3 text-sm px-8">
-          + Seguir
-        </button>
+        {currentProfile && pet.owner_id !== currentProfile.id && (
+          <button
+            onClick={() => followMut.mutate()}
+            disabled={followMut.isPending}
+            className={`mt-3 text-sm px-8 font-semibold rounded-xl py-2 transition-colors ${
+              isFollowing
+                ? 'border border-primary/30 text-primary bg-primary/5 hover:bg-primary/10'
+                : 'btn-primary'
+            }`}
+          >
+            {followMut.isPending ? '...' : isFollowing ? 'Siguiendo' : 'Seguir'}
+          </button>
+        )}
+        {pet.owner_id && (
+          <Link
+            to={`/profile/${pet.owner_id}`}
+            className="block mt-2 text-xs text-primary hover:underline"
+          >
+            {isFollowingOwner ? 'Ya seguís al dueño' : 'Ver perfil del dueño'}
+          </Link>
+        )}
       </div>
 
       <div className="flex items-center justify-between mb-3">

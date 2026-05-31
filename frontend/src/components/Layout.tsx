@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
-import { Settings } from 'lucide-react'
+import { Settings, Search } from 'lucide-react'
 import { useAuthStore } from '../stores/authStore'
+import NotificationsDropdown from './NotificationsDropdown'
 
 const tabs = [
   { to: '/feed', label: '🐾 Feed' },
@@ -34,13 +35,23 @@ export default function Layout() {
                 Siguiendo
               </NavLink>
               {token && (
-                <NavLink
-                  to="/settings"
-                  className="text-text-muted hover:text-primary transition-colors"
-                  title="Configuración"
-                >
-                  <Settings className="w-5 h-5" />
-                </NavLink>
+                <>
+                  <NavLink
+                    to="/search"
+                    className="text-text-muted hover:text-primary transition-colors"
+                    title="Buscar usuarios"
+                  >
+                    <Search className="w-5 h-5" />
+                  </NavLink>
+                  <NotificationsDropdown />
+                  <NavLink
+                    to="/settings"
+                    className="text-text-muted hover:text-primary transition-colors"
+                    title="Configuración"
+                  >
+                    <Settings className="w-5 h-5" />
+                  </NavLink>
+                </>
               )}
               <NavLink
                 to="/my-pets"

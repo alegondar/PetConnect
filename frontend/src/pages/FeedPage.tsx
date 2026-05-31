@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { feedApi, petsApi, instapetApi } from '../api/endpoints'
 import PostCard from '../components/PostCard'
 import CreatePostModal from '../components/CreatePostModal'
@@ -62,15 +63,22 @@ function PetStories() {
 }
 
 export default function FeedPage() {
+  const navigate = useNavigate()
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [feedMode, setFeedMode] = useState<'global' | 'following'>('global')
 
   const { data, isLoading } = useQuery({
-    queryKey: ['feed'],
+    queryKey: ['feed', feedMode],
     queryFn: async () => {
-      const res = await feedApi.list({ page: 1, limit: 20 })
+      const params: Record<string, string | number> = { page: 1, limit: 20 }
+      if (feedMode === 'following') params.mode = 'following'
+      const res = await feedApi.list(params)
       return res.data
     },
   })
+
+  const items = data?.items ?? []
+  const isEmptyFollowing = feedMode === 'following' && !isLoading && items.length === 0
 
   return (
     <div>
@@ -89,6 +97,32 @@ export default function FeedPage() {
         </button>
       </div>
 
+      {/* Toggle Para vos / Siguiendo */}
+      <div className="flex gap-1 mb-4 bg-gray-100 rounded-xl p-1">
+        <button
+          onClick={() => setFeedMode('global')}
+          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
+            feedMode === 'global'
+              ? 'bg-white text-primary shadow-sm'
+              : 'text-text-muted hover:text-text'
+          }`}
+          style={{ fontFamily: "'Fredoka', sans-serif" }}
+        >
+          Para vos
+        </button>
+        <button
+          onClick={() => setFeedMode('following')}
+          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
+            feedMode === 'following'
+              ? 'bg-white text-primary shadow-sm'
+              : 'text-text-muted hover:text-text'
+          }`}
+          style={{ fontFamily: "'Fredoka', sans-serif" }}
+        >
+          Siguiendo
+        </button>
+      </div>
+
       <PetStories />
 
       {isLoading && (
@@ -98,13 +132,32 @@ export default function FeedPage() {
         </div>
       )}
 
-      <div className="space-y-4">
-        {data?.items?.map((post: any, i: number) => (
-          <PostCard key={post.id} post={post} index={i} />
-        ))}
-      </div>
+      {isEmptyFollowing && (
+        <div className="text-center py-16">
+          <p className="text-text-muted text-lg font-semibold" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+            Todavía no seguís a nadie
+          </p>
+          <p className="text-text-muted text-sm mt-1 mb-4">
+            ¡Explorá usuarios y empezá a seguir!
+          </p>
+          <button
+            onClick={() => navigate('/search')}
+            className="btn-primary text-sm px-6 py-2.5"
+          >
+            Buscar usuarios
+          </button>
+        </div>
+      )}
 
-      {data?.items?.length === 0 && (
+      {!isEmptyFollowing && (
+        <div className="space-y-4">
+          {items.map((post: any, i: number) => (
+            <PostCard key={post.id} post={post} index={i} />
+          ))}
+        </div>
+      )}
+
+      {!isLoading && feedMode === 'global' && items.length === 0 && (
         <div className="text-center py-16">
           <p className="text-text-muted text-lg font-semibold" style={{ fontFamily: "'Fredoka', sans-serif" }}>
             No hay posts aún

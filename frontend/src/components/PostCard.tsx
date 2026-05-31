@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { feedApi, petsApi } from '../api/endpoints'
 import { useAuthStore } from '../stores/authStore'
 import { useState, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import CommentSection from './CommentSection'
 
 export default function PostCard({ post, index = 0 }: { post: any; index?: number }) {
@@ -111,17 +112,21 @@ export default function PostCard({ post, index = 0 }: { post: any; index?: numbe
       )}
 
       <div className="flex items-center gap-3 mb-3 pr-10">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/15 to-secondary/20 flex items-center justify-center overflow-hidden shadow-inner">
-          {pet?.photo_url ? (
-            <img src={pet.photo_url} alt={pet.name} className="w-10 h-10 object-cover" />
-          ) : (
-            <span className="text-lg font-bold text-primary">{petInitial}</span>
-          )}
-        </div>
+        <Link to={`/profile/${post.author_id}`} className="flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/15 to-secondary/20 flex items-center justify-center overflow-hidden shadow-inner hover:ring-2 hover:ring-primary/30 transition-all">
+            {pet?.photo_url ? (
+              <img src={pet.photo_url} alt={pet.name} className="w-10 h-10 object-cover" />
+            ) : (
+              <span className="text-lg font-bold text-primary">{petInitial}</span>
+            )}
+          </div>
+        </Link>
         <div className="flex-1 min-w-0">
-          <p className="font-bold text-sm text-text" style={{ fontFamily: "'Fredoka', sans-serif" }}>
-            {pet?.name || 'Mascota'}
-          </p>
+          <Link to={`/profile/${post.author_id}`} className="hover:underline">
+            <p className="font-bold text-sm text-text" style={{ fontFamily: "'Fredoka', sans-serif" }}>
+              {pet?.name || 'Mascota'}
+            </p>
+          </Link>
           {pet?.breed && (
             <p className="text-xs text-text-muted">{pet.breed}</p>
           )}
