@@ -15,6 +15,9 @@ const FollowingPage = lazy(() => import('./pages/FollowingPage'))
 const LostPetsPage = lazy(() => import('./pages/LostPetsPage'))
 const LostPetDetailPage = lazy(() => import('./pages/LostPetDetailPage'))
 const AdoptionsPage = lazy(() => import('./pages/AdoptionsPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -115,6 +118,16 @@ export default function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/settings"
+                element={
+                  <ProtectedRoute>
+                    <SettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/settings/reset-password" element={<ResetPasswordPage />} />
               <Route path="*" element={<Navigate to="/feed" replace />} />
             </Route>
           </Routes>

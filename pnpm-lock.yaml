@@ -85,6 +85,9 @@ importers:
 
   frontend:
     dependencies:
+      '@supabase/supabase-js':
+        specifier: ^2.106.2
+        version: 2.106.2
       react:
         specifier: ^19.2.6
         version: 19.2.6

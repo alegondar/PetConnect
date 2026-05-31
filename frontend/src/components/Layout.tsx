@@ -1,4 +1,6 @@
 import { NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Settings } from 'lucide-react'
+import { useAuthStore } from '../stores/authStore'
 
 const tabs = [
   { to: '/feed', label: '🐾 Feed' },
@@ -9,6 +11,7 @@ const tabs = [
 
 export default function Layout() {
   const location = useLocation()
+  const token = useAuthStore((s) => s.token)
   const hideNav = ['/login', '/register'].includes(location.pathname)
 
   return (
@@ -30,6 +33,15 @@ export default function Layout() {
               >
                 Siguiendo
               </NavLink>
+              {token && (
+                <NavLink
+                  to="/settings"
+                  className="text-text-muted hover:text-primary transition-colors"
+                  title="Configuración"
+                >
+                  <Settings className="w-5 h-5" />
+                </NavLink>
+              )}
               <NavLink
                 to="/my-pets"
                 className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary hover:bg-primary/20 transition-colors"

@@ -6,8 +6,20 @@ export const authApi = {
   login: (data: { email: string; password: string }) =>
     api.post('/auth/login', data),
   getMe: () => api.get('/auth/me'),
-  updateMe: (data: { username?: string; avatar_url?: string; bio?: string }) =>
+  updateMe: (data: { username?: string; full_name?: string; avatar_url?: string; bio?: string }) =>
     api.put('/auth/me', data),
+  changePassword: (password: string) =>
+    api.put('/auth/password', { password }),
+  changeEmail: (email: string) =>
+    api.put('/auth/email', { email }),
+  uploadAvatar: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post('/auth/avatar', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+  deleteMe: () => api.delete('/auth/me'),
 }
 
 export const petsApi = {
