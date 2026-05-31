@@ -4,6 +4,23 @@ Fecha de generación: 2026-05-31
 
 ---
 
+## 0. Funcionalidades
+
+| Módulo | Descripción |
+|---|---|
+| 🔐 **Auth** | Registro, login, recuperación de contraseña, configuración de perfil |
+| 🐾 **Feed** | Posts de mascotas con likes, comentarios y fotos |
+| 🏆 **Ranking** | Top mascotas semanal por likes |
+| 🐶 **Mis Pets** | CRUD de mascotas, visitas al veterinario, eventos health tracking |
+| 📸 **InstaPet** | Perfil social de mascotas con posts, seguidores y milestones |
+| 🔍 **Perdidos** | Reporte y búsqueda de mascotas perdidas con mapa Leaflet |
+| 🏠 **Adopciones** | Publicación y gestión de mascotas en adopción |
+| 📍 **PetFriendly** | Directorio de lugares pet-friendly con mapa |
+| 👤 **Perfil** | Avatar, username, bio, cambio de email/contraseña, eliminación de cuenta |
+| 👥 **Social** | Seguir usuarios, perfiles públicos, feed personalizado, búsqueda, notificaciones |
+
+---
+
 ## 1. Estructura de archivos
 
 ```
@@ -36,9 +53,11 @@ PetConnect/
 │       │   ├── community.ts
 │       │   ├── feed.ts
 │       │   ├── instapet.ts
+│       │   ├── notifications.ts
 │       │   ├── petfriendly.ts
 │       │   ├── pets.ts
-│       │   └── ranking.ts
+│       │   ├── ranking.ts
+│       │   └── users.ts
 │       └── schemas/
 │           ├── auth.ts
 │           ├── common.ts
@@ -47,7 +66,8 @@ PetConnect/
 │           ├── instapet.ts
 │           ├── petfriendly.ts
 │           ├── pets.ts
-│           └── ranking.ts
+│           ├── ranking.ts
+│           └── users.ts
 ├── docs/
 │   ├── db_schema.sql
 │   ├── db_schema_petfriendly.sql
@@ -70,6 +90,9 @@ PetConnect/
 │       │   ├── AvatarUpload.tsx
 │       │   ├── CommentSection.tsx
 │       │   ├── CreatePostModal.tsx
+│       │   ├── FollowButton.tsx
+│       │   ├── FollowersModal.tsx
+│       │   ├── FollowingModal.tsx
 │       │   ├── Layout.tsx
 │       │   ├── LostPetPoster.tsx
 │       │   ├── MapLocationPicker.tsx
@@ -93,7 +116,9 @@ PetConnect/
 │       │   ├── RankingPage.tsx
 │       │   ├── RegisterPage.tsx
 │       │   ├── ResetPasswordPage.tsx
-│       │   └── SettingsPage.tsx
+│       │   ├── SearchUsersPage.tsx
+│       │   ├── SettingsPage.tsx
+│       │   └── UserProfilePage.tsx
 │       ├── stores/
 │       │   └── authStore.ts
 │       └── types/
@@ -129,6 +154,8 @@ import { rankingRoutes } from "./routes/ranking.js";
 import { communityRoutes } from "./routes/community.js";
 import { instapetRoutes } from "./routes/instapet.js";
 import { petfriendlyRoutes } from "./routes/petfriendly.js";
+import { usersRoutes } from "./routes/users.js";
+import { notificationsRoutes } from "./routes/notifications.js";
 
 const app = new Hono();
 
@@ -158,6 +185,8 @@ app.route("/api/v1", rankingRoutes);
 app.route("/api/v1", communityRoutes);
 app.route("/api/v1", instapetRoutes);
 app.route("/api/v1", petfriendlyRoutes);
+app.route("/api/v1", usersRoutes);
+app.route("/api/v1", notificationsRoutes);
 
 app.get("/", (c) => c.json({ message: "PetConnect API is running" }));
 
@@ -485,6 +514,71 @@ rankingRoutes.get("/ranking", async (c) => {
 // POST /pet-friendly — Agregar lugar (auth, con campos: nombre, categoria, lat, lng, direccion, descripcion, foto_url)
 ```
 
+### 2.8a Backend: `backend-node/src/routes/users.ts`
+
+```typescript
+import { Hono } from "hono";
+import { authMiddleware } from "../middleware/auth.js";
+import { supabaseAdmin } from "../lib/supabase.js";
+import type { Variables } from "../lib/types.js";
+
+export const usersRoutes = new Hono<{ Variables: Variables }>();
+
+// Middleware optionalAuth: intenta autenticar pero no bloquea peticiones sin token
+// Helper getIsFollowing(userId, targetProfileId): consulta user_follows
+
+// GET /users/:userId — Perfil público con is_following, followers_count, following_count, posts_count
+// GET /users/:userId/posts — Posts del usuario (paginado, incluye author y pet)
+// GET /users/:userId/followers — Lista de seguidores (paginado, con is_following)
+// GET /users/:userId/following — Lista de seguidos (paginado, con is_following)
+// POST /users/:userId/follow — Seguir usuario (auth, no permite seguirse a sí mismo, unique)
+// DELETE /users/:userId/follow — Dejar de seguir (auth)
+// GET /users?q= — Búsqueda de usuarios por username o full_name (ILike, con is_following)
+```
+
+### 2.8b Backend: `backend-node/src/routes/notifications.ts`
+
+```typescript
+import { Hono } from "hono";
+import { authMiddleware } from "../middleware/auth.js";
+import { supabaseAdmin } from "../lib/supabase.js";
+import type { Variables } from "../lib/types.js";
+
+export const notificationsRoutes = new Hono<{ Variables: Variables }>();
+
+// GET /notifications — Listar notificaciones del usuario autenticado (últimas 20)
+// PATCH /notifications/read — Marcar todas las notificaciones no leídas como leídas
+```
+
+### 2.8c Backend: `backend-node/src/schemas/users.ts`
+
+```typescript
+import { z } from "zod";
+
+export const UserProfile = z.object({
+  id: z.string().uuid(), username: z.string(),
+  full_name: z.string().nullable().optional(),
+  avatar_url: z.string().url().nullable().optional(),
+  bio: z.string().nullable().optional(),
+  followers_count: z.number().int(), following_count: z.number().int(),
+  posts_count: z.number().int(), is_following: z.boolean(),
+});
+
+export const UserListItem = z.object({
+  id: z.string().uuid(), username: z.string(),
+  full_name: z.string().nullable().optional(),
+  avatar_url: z.string().url().nullable().optional(),
+  followers_count: z.number().int(), is_following: z.boolean(),
+});
+
+export const FollowResponse = z.object({ detail: z.string() });
+
+export const UserSearchQuery = z.object({
+  q: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(50).optional().default(10),
+});
+```
+
 ### 2.9 Backend: `backend-node/src/schemas/auth.ts`
 
 ```typescript
@@ -639,6 +733,8 @@ const AdoptionsPage = lazy(() => import('./pages/AdoptionsPage'))
 const SettingsPage = lazy(() => import('./pages/SettingsPage'))
 const ForgotPasswordPage = lazy(() => import('./pages/ForgotPasswordPage'))
 const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage'))
+const UserProfilePage = lazy(() => import('./pages/UserProfilePage'))
+const SearchUsersPage = lazy(() => import('./pages/SearchUsersPage'))
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 30_000, retry: 1 } },
@@ -671,6 +767,8 @@ export default function App() {
               <Route path="/lost-pets/:id" element={<ProtectedRoute><LostPetDetailPage /></ProtectedRoute>} />
               <Route path="/lost-pets" element={<ProtectedRoute><LostPetsPage /></ProtectedRoute>} />
               <Route path="/adoptions" element={<ProtectedRoute><AdoptionsPage /></ProtectedRoute>} />
+              <Route path="/profile/:userId" element={<ProtectedRoute><UserProfilePage /></ProtectedRoute>} />
+              <Route path="/search" element={<ProtectedRoute><SearchUsersPage /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
               <Route path="/forgot-password" element={<ForgotPasswordPage />} />
               <Route path="/settings/reset-password" element={<ResetPasswordPage />} />
@@ -751,6 +849,22 @@ NOTA: La ruta `/ranking` en App.tsx redirige a `/pet-friendly`. La página exist
 
 **ResetPasswordPage.tsx** — Formulario para nueva contraseña. Usa `supabase.auth.updateUser()`. Redirige a `/feed` al finalizar.
 
+**UserProfilePage.tsx** — Perfil público de usuario con:
+- Header con avatar, @username, full_name, bio
+- Contadores de posts, seguidores, siguiendo (clickeables → modales)
+- Botón Follow/Unfollow con FollowButton
+- Si es perfil propio: botón "Editar perfil" → /settings
+- Grid de 3 columnas con posts del usuario
+- Modal de detalle de post al hacer click
+- Modales de FollowersModal y FollowingModal
+
+**SearchUsersPage.tsx** — Búsqueda de usuarios con:
+- Input de búsqueda con autofocus y debounce (300ms)
+- Sugerencias al cargar (sin query): lista de usuarios recientes
+- Resultados de búsqueda por username o full_name (ILike)
+- Cada fila muestra avatar, username, full_name y FollowButton
+- Click en la fila navega a /profile/:userId
+
 ### 2.16 Frontend components
 
 **Layout.tsx** — Layout principal con:
@@ -800,6 +914,20 @@ NOTA: La ruta `/ranking` en App.tsx redirige a `/pet-friendly`. La página exist
 - Tabs recortables con teléfono
 - Usado con html2canvas para descarga/imprimir
 
+**FollowButton.tsx** — Botón Seguir/Dejar de seguir con estados:
+- Props: userId, initialIsFollowing, onFollowChange callback
+- Estados: "Seguir" (borde), "Siguiendo" (filled), hover "Dejar de seguir"
+- Maneja el estado internamente y notifica cambios al padre
+
+**FollowersModal.tsx** — Modal con lista de seguidores:
+- Paginado (scroll infinito)
+- Avatar, username, full_name, FollowButton por cada seguidor
+- Click en usuario navega a /profile/:userId
+
+**FollowingModal.tsx** — Modal con lista de seguidos:
+- Misma estructura que FollowersModal
+- Muestra usuarios seguidos con opción de unfollow
+
 ### 2.17 Frontend: `frontend/src/api/client.ts`
 
 ```typescript
@@ -842,6 +970,8 @@ Define las siguientes APIs:
 - **rankingApi**: get(limit)
 - **communityApi**: listLostPets, getLostPet, createLostPet, updateLostPet, deleteLostPet, listAdoptions, getAdoption, createAdoption, updateAdoption, deleteAdoption
 - **instapetApi**: listPosts, getPost, createPost, deletePost, listFollowers, follow, unfollow, listFollowing, listMilestones, createMilestone
+- **usersApi**: getProfile, getUserPosts, getFollowers, getFollowing, follow, unfollow, search
+- **notificationsApi**: list, markRead
 
 ### 2.19 Frontend: `frontend/src/api/endpoints/petFriendly.ts`
 
@@ -918,6 +1048,9 @@ Define las siguientes interfaces TypeScript:
 - **Follower** (id, follower_id, pet_id, created_at, follower?)
 - **FollowingPet** (pet_id, pet_name, pet_photo_url, species, followed_at)
 - **Paginated\<T\>** (items: T[], total, page, pages)
+- **UserProfile** (id, username, full_name?, avatar_url?, bio?, followers_count, following_count, posts_count, is_following) — definido en UserProfilePage
+- **UserItem** (id, username, full_name?, avatar_url?, is_following) — definido en SearchUsersPage
+- **Notification** (id, user_id, type, data: JSON, read_at?, created_at)
 
 ### 2.22 Frontend: `frontend/package.json`
 
@@ -966,7 +1099,7 @@ VITE_SUPABASE_ANON_KEY
 
 (Ver sección 7 — Schema de base de datos para el detalle completo.)
 
-Incluye 16 tablas/vistas: `profiles`, `pets`, `vet_visits`, `pet_events`, `posts`, `likes`, `comments`, `weekly_ranking`, `lost_pets`, `adoptions`, `instapet_posts`, `instapet_followers`, `instapet_milestones`, más triggers de contadores y función `update_updated_at_column()`.
+Incluye 18 tablas/vistas: `profiles`, `pets`, `vet_visits`, `pet_events`, `posts`, `likes`, `comments`, `weekly_ranking`, `lost_pets`, `adoptions`, `instapet_posts`, `instapet_followers`, `instapet_milestones`, `pet_friendly_places`, `user_follows`, `notifications`, más triggers de contadores y función `update_updated_at_column()`.
 
 ### 2.25 Documentación: `docs/openapi.yaml`
 
@@ -1123,6 +1256,8 @@ allowBuilds:
 | `/lost-pets/:id` | LostPetDetailPage | Sí | Sí | Detalle de mascota perdida |
 | `/lost-pets` | LostPetsPage | Sí | Sí | Listado de mascotas perdidas |
 | `/adoptions` | AdoptionsPage | Sí | Sí | Listado de adopciones |
+| `/profile/:userId` | UserProfilePage | Sí | Sí | Perfil público de usuario |
+| `/search` | SearchUsersPage | Sí | Sí | Búsqueda de usuarios |
 | `/settings` | SettingsPage | Sí | Sí | Configuración de perfil/cuenta |
 | `/forgot-password` | ForgotPasswordPage | No | Sí | Recuperación de contraseña |
 | `/settings/reset-password` | ResetPasswordPage | No | Sí | Establecer nueva contraseña |
@@ -1225,6 +1360,20 @@ Todos los endpoints están montados bajo `/api/v1`.
 |---|---|---|---|---|---|
 | GET | `/pet-friendly` | No | Listar lugares (paginado, ?categoria, limit default 50, máx 200) | — | `200 Paginated<Place>` |
 | POST | `/pet-friendly` | Sí | Agregar lugar | `{ nombre*, categoria*, lat*, lng*, direccion?, descripcion?, foto_url? }` | `201 Place` |
+
+### Social (Users + Notifications)
+
+| Método | Ruta | Auth | Descripción | Request Body | Response |
+|---|---|---|---|---|---|
+| GET | `/users/:userId` | Opcional | Perfil público con is_following, followers_count, following_count, posts_count | — | `200 UserProfile` |
+| GET | `/users/:userId/posts` | No | Posts del usuario (paginado, incluye author y pet) | — | `200 Paginated<Post>` |
+| GET | `/users/:userId/followers` | Opcional | Lista de seguidores (paginado, con is_following) | — | `200 Paginated<UserListItem>` |
+| GET | `/users/:userId/following` | Opcional | Lista de seguidos (paginado, con is_following) | — | `200 Paginated<UserListItem>` |
+| POST | `/users/:userId/follow` | Sí | Seguir usuario (no permite seguirse a sí mismo) | — | `201 { detail }` |
+| DELETE | `/users/:userId/follow` | Sí | Dejar de seguir | — | `200 { detail }` |
+| GET | `/users?q=` | Opcional | Buscar usuarios por username o full_name (ILike) | — | `200 { items: UserListItem[] }` |
+| GET | `/notifications` | Sí | Listar notificaciones del usuario (últimas 20) | — | `200 { items: Notification[] }` |
+| PATCH | `/notifications/read` | Sí | Marcar todas las no leídas como leídas | — | `200 { read: number }` |
 
 ---
 
@@ -1468,6 +1617,35 @@ NOTA: Es una vista materializada que debe refrescarse manualmente (no hay trigge
 
 **RLS:** SELECT público, INSERT con WITH CHECK (true) — backend valida auth
 
+### 7.15 Tabla: `user_follows`
+| Columna | Tipo | Constraints |
+|---|---|---|
+| id | uuid | PK, default gen_random_uuid() |
+| follower_id | uuid | FK → profiles(id) ON DELETE CASCADE NOT NULL |
+| following_id | uuid | FK → profiles(id) ON DELETE CASCADE NOT NULL |
+| created_at | timestamptz | NOT NULL DEFAULT now() |
+| — | — | UNIQUE(follower_id, following_id) |
+
+**Índices:** idx_user_follows_follower, idx_user_follows_following
+
+**Triggers:** trigger_follow_counts (AFTER INSERT/DELETE → actualiza contadores en profiles), trigger_notify_follower (AFTER INSERT → crea notificación de "new_follower")
+
+**RLS:** SELECT/INSERT/DELETE con WITH CHECK (true) — backend usa service_role
+
+### 7.16 Tabla: `notifications`
+| Columna | Tipo | Constraints |
+|---|---|---|
+| id | uuid | PK, default gen_random_uuid() |
+| user_id | uuid | FK → auth.users(id) ON DELETE CASCADE NOT NULL |
+| type | text | NOT NULL, CHECK IN ('new_follower') |
+| data | jsonb | NOT NULL DEFAULT '{}' |
+| read_at | timestamptz | nullable |
+| created_at | timestamptz | NOT NULL DEFAULT now() |
+
+**Índices:** idx_notifications_user (user_id, created_at DESC), idx_notifications_unread (user_id) WHERE read_at IS NULL
+
+**RLS:** SELECT/INSERT/UPDATE con WITH CHECK (true) — backend usa service_role
+
 ### Funciones y triggers globales
 
 - `update_updated_at_column()` — Actualiza `updated_at = now()` en BEFORE UPDATE
@@ -1615,6 +1793,32 @@ NOTA: Es una vista materializada que debe refrescarse manualmente (no hay trigge
 ### 8.8 Settings / Perfil
 
 Integrado en el módulo Auth y cubierto en SettingsPage. Completo: perfil, avatar, email, contraseña, logout, eliminación de cuenta. Las notificaciones son placeholders ("Próximamente").
+
+### 8.9 Social (Users + Notifications)
+
+**Endpoints backend (9):**
+- GET `/users/:userId` ✅
+- GET `/users/:userId/posts` ✅
+- GET `/users/:userId/followers` ✅
+- GET `/users/:userId/following` ✅
+- POST `/users/:userId/follow` ✅
+- DELETE `/users/:userId/follow` ✅
+- GET `/users?q=` ✅
+- GET `/notifications` ✅
+- PATCH `/notifications/read` ✅
+
+**Páginas/componentes frontend:**
+- UserProfilePage ✅ (perfil público, grid de posts, seguidores/seguidos modales)
+- SearchUsersPage ✅ (búsqueda con debounce, sugerencias, FollowButton)
+- FollowButton ✅ (botón seguir/dejar de seguir con estados)
+- FollowersModal ✅ (lista de seguidores con FollowButton)
+- FollowingModal ✅ (lista de seguidos con FollowButton)
+- usersApi (client) ✅
+- notificationsApi (client) ✅
+
+**¿Qué está completo?** El módulo Social está **completo** con perfiles públicos, follow/unfollow, búsqueda de usuarios y notificaciones básicas (new_follower).
+
+**¿Qué falta?** No hay UI de notificaciones en el frontend (campanita/badge). Solo existe el tipo `new_follower`; no hay notificaciones para likes, comentarios, etc. No hay endpoints DELETE/PUT para milestones de InstaPet.
 
 ---
 
