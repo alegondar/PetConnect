@@ -138,12 +138,12 @@ export default function ServicesPage() {
       </div>
 
       {/* Filter chips */}
-      <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-none mb-1 -mx-4 px-4">
+      <div className="flex gap-1.5 flex-wrap pb-3 mb-1">
         {filterTypes.map((f) => (
           <button
             key={f.value}
             onClick={() => setTypeFilter(f.value)}
-              className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
                 typeFilter === f.value
                   ? "bg-primary text-white"
                   : "bg-gray-100 text-text-muted hover:bg-gray-200"
@@ -152,7 +152,6 @@ export default function ServicesPage() {
               {f.label}
             </button>
             ))}
-        <div className="flex-shrink-0 w-8" />
       </div>
 
       {/* Search bar — solo en tab "Busco servicio" */}
