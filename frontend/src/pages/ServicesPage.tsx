@@ -35,6 +35,8 @@ export default function ServicesPage() {
     subtitle?: string;
   } | null>(null);
   const [menuOpen, setMenuOpen] = useState<string | null>(null);
+  const [searchLocation, setSearchLocation] = useState("");
+  const [searchedLocation, setSearchedLocation] = useState("");
 
   const deleteRequestMut = useMutation({
     mutationFn: (id: string) => servicesApi.deleteRequest(id),
@@ -52,8 +54,16 @@ export default function ServicesPage() {
     },
   });
 
+  const handleSearch = () => {
+    setSearchedLocation(searchLocation.trim());
+  };
+
   const reqParams: Record<string, string | number> = { page: 1, limit: 20 };
   if (typeFilter) reqParams.type = typeFilter;
+
+  const offerParams: Record<string, string | number> = { page: 1, limit: 50 };
+  if (typeFilter) offerParams.type = typeFilter;
+  if (searchedLocation) offerParams.location = searchedLocation;
 
   const { data: requestsData, isLoading: loadingRequests, fetchNextPage: fetchMoreRequests, hasNextPage: hasMoreRequests, isFetchingNextPage: fetchingMoreRequests } = useQuery({
     queryKey: ["services-requests", typeFilter],
@@ -65,12 +75,12 @@ export default function ServicesPage() {
   });
 
   const { data: offersData, isLoading: loadingOffers, fetchNextPage: fetchMoreOffers, hasNextPage: hasMoreOffers, isFetchingNextPage: fetchingMoreOffers } = useQuery({
-    queryKey: ["services-offers", typeFilter],
+    queryKey: ["services-offers", typeFilter, searchedLocation],
     queryFn: async () => {
-      const res = await servicesApi.listOffers(reqParams);
+      const res = await servicesApi.listOffers(offerParams);
       return res.data;
     },
-    enabled: tab === "offers",
+    enabled: tab === "offers" || (tab === "requests" && !!searchedLocation),
   });
 
   return (
@@ -132,6 +142,34 @@ export default function ServicesPage() {
         ))}
       </div>
 
+      {/* Search bar — solo en tab "Busco servicio" */}
+      {tab === "requests" && (
+        <div className="mb-4 flex gap-2">
+          <input
+            value={searchLocation}
+            onChange={(e) => setSearchLocation(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            placeholder="Buscar por barrio o ciudad..."
+            className="input-pet flex-1"
+          />
+          <button
+            onClick={handleSearch}
+            disabled={!searchLocation.trim()}
+            className="btn-primary text-sm px-4 py-2.5 disabled:opacity-40"
+          >
+            🔍 Buscar
+          </button>
+          {searchedLocation && (
+            <button
+              onClick={() => { setSearchLocation(""); setSearchedLocation(""); }}
+              className="btn-secondary text-sm px-3 py-2.5"
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Action button */}
       <div className="mb-4">
         {tab === "requests" ? (
@@ -152,7 +190,7 @@ export default function ServicesPage() {
       </div>
 
       {/* Requests tab */}
-      {tab === "requests" && (
+      {tab === "requests" && !searchedLocation && (
         <div className="space-y-3">
           {loadingRequests && (
             <div className="flex justify-center py-16">
@@ -224,6 +262,67 @@ export default function ServicesPage() {
                     id: req.id,
                     title: req.title,
                     subtitle: `@${req.requester?.username || "usuario"}`,
+                  })
+                }
+                className="btn-primary text-xs px-4 py-2"
+              >
+                Contactar
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Search results — cuando se busca una ubicación */}
+      {tab === "requests" && searchedLocation && (
+        <div className="space-y-3">
+          <p className="text-sm text-text-muted mb-1">
+            Resultados para "<strong>{searchedLocation}</strong>" ({offersData?.total || 0} paseadores)
+          </p>
+          {loadingOffers && (
+            <div className="flex justify-center py-16">
+              <div className="w-10 h-10 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+            </div>
+          )}
+          {!loadingOffers && (!offersData?.items || offersData.items.length === 0) && (
+            <div className="text-center py-16">
+              <p className="text-text-muted text-lg font-semibold">No se encontraron paseadores</p>
+              <p className="text-text-muted text-sm mt-1">Probá con otra ubicación</p>
+            </div>
+          )}
+          {offersData?.items?.map((offer: any) => (
+            <div key={offer.id} className="card-pet p-4">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-14 h-14 rounded-xl bg-gray-100 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                  {offer.photo_url ? (
+                    <img src={offer.photo_url} className="w-full h-full object-cover" alt="" />
+                  ) : (
+                    <span className="text-2xl">🐾</span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm mb-0.5">{offer.title}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-text-muted">
+                      @{offer.provider?.username || "usuario"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-text-muted line-clamp-2 mb-2">{offer.description}</p>
+              {offer.price_from && (
+                <p className="text-sm font-bold text-primary mb-1">
+                  ${offer.price_from}{offer.price_unit ? ` ${offer.price_unit}` : ""}
+                </p>
+              )}
+              <p className="text-xs text-text-muted mb-3">📍 {offer.location}</p>
+              <button
+                onClick={() =>
+                  setContactTarget({
+                    mode: "offer",
+                    id: offer.id,
+                    title: offer.title,
+                    subtitle: `@${offer.provider?.username || "usuario"}`,
                   })
                 }
                 className="btn-primary text-xs px-4 py-2"
