@@ -145,14 +145,15 @@ export default function ServicesPage() {
             onClick={() => setTypeFilter(f.value)}
               className={`px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
                 typeFilter === f.value
-                ? "bg-primary text-white"
-                : "bg-gray-100 text-text-muted hover:bg-gray-200"
-            }`}
-          >
-            {f.label}
-          </button>
-          ))}
-        </div>
+                  ? "bg-primary text-white"
+                  : "bg-gray-100 text-text-muted hover:bg-gray-200"
+              }`}
+            >
+              {f.label}
+            </button>
+            ))}
+        <div className="flex-shrink-0 w-8" />
+      </div>
 
       {/* Search bar — solo en tab "Busco servicio" */}
       {tab === "requests" && (
