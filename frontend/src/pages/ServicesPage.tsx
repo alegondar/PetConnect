@@ -1,10 +1,22 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import L from "leaflet";
 import { servicesApi } from "../api/endpoints";
 import { useAuthStore } from "../stores/authStore";
 import CreateRequestModal from "../components/services/CreateRequestModal";
 import CreateOfferModal from "../components/services/CreateOfferModal";
 import ContactServiceModal from "../components/services/ContactServiceModal";
+
+const defaultIcon = new L.Icon({
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
 
 const filterTypes = [
   { value: "", label: "Todos" },
@@ -139,8 +151,37 @@ export default function ServicesPage() {
           >
             {f.label}
           </button>
-        ))}
-      </div>
+          ))}
+          {offersData?.items && offersData.items.length > 0 && (
+            <div className="rounded-xl overflow-hidden mt-4" style={{ height: 300 }}>
+              <MapContainer
+                center={[-34.6037, -58.3816]}
+                zoom={12}
+                style={{ height: "100%", width: "100%" }}
+                scrollWheelZoom={false}
+              >
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                {offersData.items.map((o: any) =>
+                  o.lat && o.lng ? (
+                    <Marker
+                      key={o.id}
+                      position={[o.lat, o.lng]}
+                      icon={defaultIcon}
+                    >
+                      <Popup>
+                        <div className="text-sm">
+                          <p className="font-bold">{o.title}</p>
+                          {o.price_from && <p className="text-primary">${o.price_from} {o.price_unit || ""}</p>}
+                          <p className="text-xs text-gray-500">{o.location}</p>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  ) : null
+                )}
+              </MapContainer>
+            </div>
+          )}
+        </div>
 
       {/* Search bar — solo en tab "Busco servicio" */}
       {tab === "requests" && (
@@ -427,6 +468,37 @@ export default function ServicesPage() {
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Map — visible cuando hay resultados */}
+      {offersData?.items && offersData.items.length > 0 && !searchedLocation && tab === "offers" && (
+        <div className="rounded-xl overflow-hidden mt-4" style={{ height: 300 }}>
+          <MapContainer
+            center={[-34.6037, -58.3816]}
+            zoom={12}
+            style={{ height: "100%", width: "100%" }}
+            scrollWheelZoom={false}
+          >
+            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+            {offersData.items.map((o: any) =>
+              o.lat && o.lng ? (
+                <Marker
+                  key={o.id}
+                  position={[o.lat, o.lng]}
+                  icon={defaultIcon}
+                >
+                  <Popup>
+                    <div className="text-sm">
+                      <p className="font-bold">{o.title}</p>
+                      {o.price_from && <p className="text-primary">${o.price_from} {o.price_unit || ""}</p>}
+                      <p className="text-xs text-gray-500">{o.location}</p>
+                    </div>
+                  </Popup>
+                </Marker>
+              ) : null
+            )}
+          </MapContainer>
         </div>
       )}
 

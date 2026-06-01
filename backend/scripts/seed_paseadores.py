@@ -41,19 +41,17 @@ with open(data_path) as f:
 paseadores = data["paseadores"]
 print(f"Cargados {len(paseadores)} paseadores del JSON")
 
-# Tomar una muestra (primeros 50)
-muestra = paseadores[:50]
-# Filtrar solo los que tienen coordenadas válidas
+# Tomar todos los válidos
 validos = [
     p
-    for p in muestra
+    for p in paseadores
     if p.get("lat")
     and p.get("lng")
     and p.get("nombre")
     and float(p["lat"]) != 0
     and float(p["lng"]) != 0
 ]
-print(f"Válidos con coordenadas: {len(validos)}/{len(muestra)}")
+print(f"Válidos con coordenadas: {len(validos)}/{len(paseadores)}")
 
 insertados = 0
 errores = 0
