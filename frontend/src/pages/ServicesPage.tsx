@@ -138,7 +138,7 @@ export default function ServicesPage() {
       </div>
 
       {/* Filter chips */}
-      <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-none mb-1">
+      <div className="flex gap-2 overflow-x-auto pb-3 scrollbar-none mb-1 -mx-4 px-4">
         {filterTypes.map((f) => (
           <button
             key={f.value}
