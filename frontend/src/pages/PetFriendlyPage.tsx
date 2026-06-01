@@ -111,10 +111,10 @@ export default function PetFriendlyPage() {
         <p className="text-sm text-text-muted mt-0.5">Lugares que aceptan mascotas en Buenos Aires</p>
       </div>
 
-      <div className="flex gap-2 mb-4 flex-wrap">
+      <div className="flex gap-1.5 mb-4 flex-wrap -mx-4 px-4">
         <button
           onClick={() => setCategoriaFilter(undefined)}
-          className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap ${!categoriaFilter ? 'badge-pet' : 'bg-gray-100 text-text-muted hover:bg-gray-200'}`}
+          className={`px-3 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap ${!categoriaFilter ? 'badge-pet' : 'bg-gray-100 text-text-muted hover:bg-gray-200'}`}
           style={{ fontFamily: "'Fredoka', sans-serif" }}
         >
           Todas
@@ -123,7 +123,7 @@ export default function PetFriendlyPage() {
           <button
             key={cat}
             onClick={() => setCategoriaFilter(cat)}
-            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap ${categoriaFilter === cat ? 'badge-pet' : 'bg-gray-100 text-text-muted hover:bg-gray-200'}`}
+            className={`px-3 py-1.5 rounded-full text-sm font-bold transition-all whitespace-nowrap ${categoriaFilter === cat ? 'badge-pet' : 'bg-gray-100 text-text-muted hover:bg-gray-200'}`}
             style={{ fontFamily: "'Fredoka', sans-serif" }}
           >
             {CATEGORY_LABELS[cat]}
