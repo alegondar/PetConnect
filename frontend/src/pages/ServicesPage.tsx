@@ -302,6 +302,32 @@ export default function ServicesPage() {
               <p className="text-text-muted text-sm mt-1">Probá con otra ubicación</p>
             </div>
           )}
+          {/* Mapa de resultados */}
+          {offersData?.items && offersData.items.length > 0 && (
+            <div className="rounded-xl overflow-hidden" style={{ height: 350 }}>
+              <MapContainer
+                center={[-34.6037, -58.3816]}
+                zoom={12}
+                style={{ height: "100%", width: "100%" }}
+                scrollWheelZoom={false}
+              >
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                {offersData.items.map((o: any) =>
+                  o.lat && o.lng ? (
+                    <Marker key={o.id} position={[o.lat, o.lng]} icon={defaultIcon}>
+                      <Popup>
+                        <div className="text-sm">
+                          <p className="font-bold">{o.title}</p>
+                          {o.price_from && <p className="text-primary">${o.price_from} {o.price_unit || ""}</p>}
+                          <p className="text-xs text-gray-500">{o.location}</p>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  ) : null
+                )}
+              </MapContainer>
+            </div>
+          )}
           {offersData?.items?.map((offer: any) => (
             <div key={offer.id} className="card-pet p-4">
               <div className="flex items-start gap-3 mb-3">
@@ -343,32 +369,6 @@ export default function ServicesPage() {
               </button>
             </div>
           ))}
-          {/* Mapa de resultados */}
-          {offersData?.items && offersData.items.length > 0 && (
-            <div className="rounded-xl overflow-hidden" style={{ height: 350 }}>
-              <MapContainer
-                center={[-34.6037, -58.3816]}
-                zoom={12}
-                style={{ height: "100%", width: "100%" }}
-                scrollWheelZoom={false}
-              >
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                {offersData.items.map((o: any) =>
-                  o.lat && o.lng ? (
-                    <Marker key={o.id} position={[o.lat, o.lng]} icon={defaultIcon}>
-                      <Popup>
-                        <div className="text-sm">
-                          <p className="font-bold">{o.title}</p>
-                          {o.price_from && <p className="text-primary">${o.price_from} {o.price_unit || ""}</p>}
-                          <p className="text-xs text-gray-500">{o.location}</p>
-                        </div>
-                      </Popup>
-                    </Marker>
-                  ) : null
-                )}
-              </MapContainer>
-            </div>
-          )}
         </div>
       )}
 
