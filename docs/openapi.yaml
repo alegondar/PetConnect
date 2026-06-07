@@ -1094,6 +1094,31 @@ paths:
         "401":
           $ref: "#/components/responses/Unauthorized"
 
+  # =========================================================================
+  # VETERINARIAS 24HS
+  # =========================================================================
+  /veterinarias:
+    get:
+      tags: [Veterinarias]
+      summary: Listar veterinarias de guardia 24hs
+      security: []
+      parameters:
+        - name: zona
+          in: query
+          schema:
+            type: string
+            enum: [CABA, GBA]
+          description: Filtrar por zona geográfica
+      responses:
+        "200":
+          description: Lista de veterinarias 24hs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Veterinaria"
+
 # ============================================================================
 # COMPONENTS
 # ============================================================================
@@ -2390,3 +2415,42 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/ServiceContact"
+
+    # --- Veterinaria ---
+    Veterinaria:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        nombre:
+          type: string
+          example: "Amenábar 2214"
+        direccion:
+          type: string
+          example: "Amenábar 2214"
+        telefono:
+          type: string
+          example: "4782-9079"
+        zona:
+          type: string
+          enum: [CABA, GBA]
+          example: "CABA"
+        lat:
+          type: number
+          format: double
+          example: -34.5621073
+        lng:
+          type: number
+          format: double
+          example: -58.4595878
+        descripcion:
+          type: string
+          nullable: true
+          example: "Centro Médico Veterinario Belgrano"
+        verified:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time

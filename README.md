@@ -20,6 +20,7 @@ Plataforma para conectar dueños de mascotas con servicios veterinarios, cuidado
 | 🔍 **Perdidos** | Reporte y búsqueda de mascotas perdidas con mapa Leaflet |
 | 🏠 **Adopciones** | Publicación y gestión de mascotas en adopción |
 | 📍 **PetFriendly** | Directorio de 357+ lugares pet-friendly en Buenos Aires con mapa |
+| 🏥 **Veterinarias 24hs** | Mapa de veterinarias 24hs de CABA y GBA importadas desde KMZ |
 | 👤 **Perfil** | Avatar, username, bio, cambio de email/contraseña, eliminación de cuenta |
 | 🔔 **Notificaciones** | Toggles placeholder (próximamente) |
 

@@ -13,6 +13,7 @@ import { petfriendlyRoutes } from "./routes/petfriendly.js";
 import { usersRoutes } from "./routes/users.js";
 import { notificationsRoutes } from "./routes/notifications.js";
 import { servicesRoutes } from "./routes/services.js";
+import { veterinariasRoutes } from "./routes/veterinarias.js";
 
 const app = new Hono();
 
@@ -45,6 +46,7 @@ app.route("/api/v1", petfriendlyRoutes);
 app.route("/api/v1", usersRoutes);
 app.route("/api/v1", notificationsRoutes);
 app.route("/api/v1", servicesRoutes);
+app.route("/api/v1", veterinariasRoutes);
 
 app.get("/", (c) => c.json({ message: "PetConnect API is running" }));
 

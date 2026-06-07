@@ -7,6 +7,7 @@ import { useAuthStore } from "../stores/authStore";
 import CreateRequestModal from "../components/services/CreateRequestModal";
 import CreateOfferModal from "../components/services/CreateOfferModal";
 import ContactServiceModal from "../components/services/ContactServiceModal";
+import VeterinariasMap from "../components/VeterinariasMap";
 
 const defaultIcon = new L.Icon({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -497,6 +498,11 @@ export default function ServicesPage() {
             )}
           </MapContainer>
         </div>
+      )}
+
+      {/* Veterinarias 24hs map */}
+      {typeFilter === "veterinario" && (
+        <VeterinariasMap />
       )}
 
       {/* Modals */}
