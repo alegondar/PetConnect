@@ -74,7 +74,7 @@ pnpm install
 pnpm --filter petconnect-backend dev
 ```
 
-El servidor corre en `http://localhost:8000`. Las rutas de la API están bajo `/api/v1`.
+El servidor corre en `http://localhost:8001`. Las rutas de la API están bajo `/api/v1`.
 
 Variables de entorno necesarias en `backend-node/.env`:
 
@@ -83,7 +83,7 @@ SUPABASE_URL=https://<project>.supabase.co
 SUPABASE_ANON_KEY=<anon_key>
 SUPABASE_SERVICE_KEY=<service_role_key>
 FRONTEND_ORIGIN=http://localhost:5173
-PORT=8000
+PORT=8001
 ```
 
 ### Frontend
@@ -92,7 +92,7 @@ PORT=8000
 pnpm --filter frontend dev
 ```
 
-El frontend corre en `http://localhost:5173` y usa un proxy de Vite para redirigir `/api` al backend en `:8000`.
+El frontend corre en `http://localhost:5173` y usa un proxy de Vite para redirigir `/api` al backend en `:8001`.
 
 Variables de entorno en `frontend/.env`:
 

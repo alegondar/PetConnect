@@ -1,5 +1,8 @@
 packages:
   - "frontend"
   - "backend-node"
+  - "backend-worker"
 allowBuilds:
   esbuild: true
+  sharp: true
+  workerd: true

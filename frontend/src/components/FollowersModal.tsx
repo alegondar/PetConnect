@@ -3,7 +3,6 @@ import { X, Search } from 'lucide-react'
 import { usersApi } from '../api/endpoints'
 import { useAuthStore } from '../stores/authStore'
 import FollowButton from './FollowButton'
-import type { Profile } from '../types'
 
 interface Props {
   userId: string

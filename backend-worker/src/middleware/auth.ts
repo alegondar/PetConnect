@@ -1,0 +1,35 @@
+import { createMiddleware } from "hono/factory";
+import { getSupabaseClients } from "../lib/supabase.js";
+import type { Bindings } from "../index.js";
+
+export const authMiddleware = createMiddleware<{
+  Bindings: Bindings;
+  Variables: { userId: string };
+}>(async (c, next) => {
+  const authHeader = c.req.header("Authorization");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return c.json({ detail: "No autenticado" }, 401);
+  }
+
+  const token = authHeader.slice(7);
+
+  const { supabaseAdmin } = getSupabaseClients(c.env);
+  const { data, error } = await supabaseAdmin.auth.getUser(token);
+
+  if (error || !data.user) {
+    return c.json({ detail: "No autenticado" }, 401);
+  }
+
+  const { data: profile } = await supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("user_id", data.user.id)
+    .single();
+
+  if (!profile) {
+    return c.json({ detail: "Usuario no encontrado" }, 401);
+  }
+
+  c.set("userId", profile.id);
+  await next();
+});

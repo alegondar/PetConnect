@@ -27,7 +27,7 @@ export default function CommentSection({ postId }: { postId: string }) {
     <div>
       <div className="space-y-2.5 max-h-56 overflow-y-auto mb-3">
         {isLoading && <p className="text-xs text-text-muted">Cargando...</p>}
-        {data?.items?.map((c: any, i: number) => (
+        {data?.items?.map((c: any) => (
           <div key={c.id} className="text-sm flex gap-2">
             <span className="font-bold text-primary-dark shrink-0" style={{ fontFamily: "'Fredoka', sans-serif" }}>
               {c.author?.username}:

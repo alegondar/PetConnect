@@ -1,0 +1,8 @@
+name = "petconnect-backend"
+main = "src/index.ts"
+compatibility_date = "2026-07-09"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+FRONTEND_ORIGIN = "https://petconnect.pages.dev"
+SUPABASE_URL = "https://uaaykpfslppwbumpdsbb.supabase.co"

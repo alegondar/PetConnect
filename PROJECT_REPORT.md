@@ -160,7 +160,7 @@ import { notificationsRoutes } from "./routes/notifications.js";
 const app = new Hono();
 
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
-const PORT = Number(process.env.PORT) || 8000;
+const PORT = Number(process.env.PORT) || 8001;
 
 app.use(logger());
 app.use(

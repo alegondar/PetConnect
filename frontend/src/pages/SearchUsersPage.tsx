@@ -21,7 +21,7 @@ export default function SearchUsersPage() {
   const [results, setResults] = useState<UserItem[]>([])
   const [suggestions, setSuggestions] = useState<UserItem[]>([])
   const [loading, setLoading] = useState(false)
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>()
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     usersApi.search('', 10).then((res) => {

@@ -4,14 +4,14 @@ context: |
   Proyecto: PetConnect - App de mascotas con versión web y Android
   
   Stack backend:
-    - FastAPI + Python 3.11+
+    - Hono 4.7 + TypeScript 5.8 + tsx (sin build step)
     - Supabase (PostgreSQL + Auth + Storage)
-    - supabase-py, pydantic v2, python-jose, uvicorn
+    - @supabase/supabase-js 2.49 (anon + service_role)
     - Deploy: Railway
   
   Stack frontend web:
-    - React 18 + Vite + TypeScript
-    - Tailwind CSS v3 + shadcn/ui
+    - React 19 + Vite + TypeScript
+    - Tailwind CSS v4 (plugin Vite, sin tailwind.config)
     - React Query v5, Zustand, React Router v6
     - Axios, react-hook-form + zod
     - Deploy: Vercel
@@ -20,9 +20,11 @@ context: |
     - Jetpack Compose, MVVM, Hilt, Retrofit, Coil
   
   Estructura del monorepo:
-    - backend/   → FastAPI
-    - frontend/  → React + Vite
-    - docs/      → openapi.yaml, db_schema.sql
+    - backend-node/   → Hono + TypeScript (ACTIVO)
+    - backend/        → FastAPI (DEPRECADO desde 2026-05-31)
+    - backend-worker/ → Cloudflare Workers (SOLO deploy)
+    - frontend/       → React + Vite
+    - docs/           → openapi.yaml, db_schema.sql
   
   Features v1:
     - Login/Auth (JWT con Supabase Auth)

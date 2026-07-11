@@ -78,7 +78,7 @@ export default function ServicesPage() {
   if (typeFilter) offerParams.type = typeFilter;
   if (searchedLocation) offerParams.location = searchedLocation;
 
-  const { data: requestsData, isLoading: loadingRequests, fetchNextPage: fetchMoreRequests, hasNextPage: hasMoreRequests, isFetchingNextPage: fetchingMoreRequests } = useQuery({
+  const { data: requestsData, isLoading: loadingRequests } = useQuery({
     queryKey: ["services-requests", typeFilter],
     queryFn: async () => {
       const res = await servicesApi.listRequests(reqParams);
@@ -87,7 +87,7 @@ export default function ServicesPage() {
     enabled: tab === "requests",
   });
 
-  const { data: offersData, isLoading: loadingOffers, fetchNextPage: fetchMoreOffers, hasNextPage: hasMoreOffers, isFetchingNextPage: fetchingMoreOffers } = useQuery({
+  const { data: offersData, isLoading: loadingOffers } = useQuery({
     queryKey: ["services-offers", typeFilter, searchedLocation],
     queryFn: async () => {
       const res = await servicesApi.listOffers(offerParams);
