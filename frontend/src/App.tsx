@@ -48,11 +48,7 @@ export default function App() {
               <Route path="/register" element={<RegisterPage />} />
               <Route
                 path="/feed"
-                element={
-                  <ProtectedRoute>
-                    <FeedPage />
-                  </ProtectedRoute>
-                }
+                element={<FeedPage />}
               />
               <Route
                 path="/ranking"
@@ -60,11 +56,7 @@ export default function App() {
               />
               <Route
                 path="/pet-friendly"
-                element={
-                  <ProtectedRoute>
-                    <PetFriendlyPage />
-                  </ProtectedRoute>
-                }
+                element={<PetFriendlyPage />}
               />
               <Route
                 path="/my-pets"
@@ -100,27 +92,15 @@ export default function App() {
               />
               <Route
                 path="/lost-pets/:id"
-                element={
-                  <ProtectedRoute>
-                    <LostPetDetailPage />
-                  </ProtectedRoute>
-                }
+                element={<LostPetDetailPage />}
               />
               <Route
                 path="/lost-pets"
-                element={
-                  <ProtectedRoute>
-                    <LostPetsPage />
-                  </ProtectedRoute>
-                }
+                element={<LostPetsPage />}
               />
               <Route
                 path="/adoptions"
-                element={
-                  <ProtectedRoute>
-                    <AdoptionsPage />
-                  </ProtectedRoute>
-                }
+                element={<AdoptionsPage />}
               />
               <Route
                 path="/profile/:userId"

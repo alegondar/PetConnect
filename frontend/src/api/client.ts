@@ -12,6 +12,7 @@ api.interceptors.request.use((config) => {
       const token = parsed?.state?.token
       if (token) {
         config.headers.Authorization = `Bearer ${token}`
+        ;(config as any)._hadToken = true
       }
     }
   } catch {
@@ -23,7 +24,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 && (error.config as any)?._hadToken) {
       localStorage.removeItem('auth-storage')
       window.location.href = '/login'
     }
