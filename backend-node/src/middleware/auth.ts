@@ -34,3 +34,23 @@ export const authMiddleware = createMiddleware<{ Variables: Variables }>(
     await next();
   }
 );
+
+export function optionalAuth() {
+  return createMiddleware<{ Variables: Variables }>(async (c, next) => {
+    const authHeader = c.req.header("Authorization");
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.slice(7);
+      const { supabaseAdmin } = await import("../lib/supabase.js");
+      const { data } = await supabaseAdmin.auth.getUser(token);
+      if (data.user) {
+        const { data: profile } = await supabaseAdmin
+          .from("profiles")
+          .select("id")
+          .eq("user_id", data.user.id)
+          .single();
+        if (profile) c.set("userId", profile.id);
+      }
+    }
+    await next();
+  });
+}
