@@ -1,28 +1,9 @@
 import { Hono } from "hono";
-import { authMiddleware } from "../middleware/auth.js";
+import { authMiddleware, optionalAuth } from "../middleware/auth.js";
 import { supabaseAdmin } from "../lib/supabase.js";
 import type { Variables } from "../lib/types.js";
 
 export const usersRoutes = new Hono<{ Variables: Variables }>();
-
-function optionalAuth() {
-  return async (c: any, next: any) => {
-    const authHeader = c.req.header("Authorization");
-    if (authHeader?.startsWith("Bearer ")) {
-      const token = authHeader.slice(7);
-      const { data } = await supabaseAdmin.auth.getUser(token);
-      if (data.user) {
-        const { data: profile } = await supabaseAdmin
-          .from("profiles")
-          .select("id")
-          .eq("user_id", data.user.id)
-          .single();
-        if (profile) c.set("userId", profile.id);
-      }
-    }
-    await next();
-  };
-}
 
 async function getIsFollowing(
   userId: string,
