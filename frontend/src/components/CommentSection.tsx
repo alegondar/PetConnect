@@ -1,10 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { feedApi } from '../api/endpoints'
+import { useAuthStore } from '../stores/authStore'
 import { useState } from 'react'
+import LoginPromptModal from './LoginPromptModal'
 
 export default function CommentSection({ postId }: { postId: string }) {
   const queryClient = useQueryClient()
+  const token = useAuthStore((s) => s.token)
   const [text, setText] = useState('')
+  const [showLoginModal, setShowLoginModal] = useState(false)
 
   const { data, isLoading } = useQuery({
     queryKey: ['comments', postId],
@@ -22,6 +26,15 @@ export default function CommentSection({ postId }: { postId: string }) {
       alert('Error al publicar comentario')
     },
   })
+
+  const handleSubmit = () => {
+    if (!text) return
+    if (!token) {
+      setShowLoginModal(true)
+      return
+    }
+    createMut.mutate()
+  }
 
   return (
     <div>
@@ -42,16 +55,22 @@ export default function CommentSection({ postId }: { postId: string }) {
           onChange={(e) => setText(e.target.value)}
           placeholder="Comenta algo..."
           className="flex-1 input-pet py-2 text-sm"
-          onKeyDown={(e) => e.key === 'Enter' && text && createMut.mutate()}
+          onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
         />
         <button
-          onClick={() => text && createMut.mutate()}
+          onClick={handleSubmit}
           disabled={!text}
           className="btn-primary text-xs px-4 py-2 disabled:opacity-40 disabled:shadow-none"
         >
           Enviar
         </button>
       </div>
+
+      <LoginPromptModal
+        open={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        action="comentar"
+      />
     </div>
   )
 }

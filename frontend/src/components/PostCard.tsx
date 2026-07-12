@@ -4,10 +4,12 @@ import { useAuthStore } from '../stores/authStore'
 import { useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import CommentSection from './CommentSection'
+import LoginPromptModal from './LoginPromptModal'
 
 export default function PostCard({ post, index = 0 }: { post: any; index?: number }) {
   const queryClient = useQueryClient()
   const profile = useAuthStore((s) => s.profile)
+  const token = useAuthStore((s) => s.token)
   const isAuthor = profile?.id === post.author_id
 
   const [showComments, setShowComments] = useState(false)
@@ -19,6 +21,8 @@ export default function PostCard({ post, index = 0 }: { post: any; index?: numbe
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [loginAction, setLoginAction] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const likeMut = useMutation({
@@ -154,7 +158,14 @@ export default function PostCard({ post, index = 0 }: { post: any; index?: numbe
 
       <div className="flex items-center gap-4">
         <button
-          onClick={() => likeMut.mutate()}
+          onClick={() => {
+            if (!token) {
+              setLoginAction('dar like')
+              setShowLoginModal(true)
+              return
+            }
+            likeMut.mutate()
+          }}
           className="text-lg transition-transform hover:scale-110 active:scale-90"
         >
           {liked ? '❤️' : '🤍'}
@@ -239,6 +250,12 @@ export default function PostCard({ post, index = 0 }: { post: any; index?: numbe
           </div>
         </div>
       )}
+
+      <LoginPromptModal
+        open={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        action={loginAction}
+      />
     </div>
   )
 }

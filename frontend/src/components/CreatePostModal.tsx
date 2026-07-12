@@ -1,15 +1,19 @@
 import { useState, useRef } from 'react'
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query'
 import { feedApi, petsApi } from '../api/endpoints'
+import { useAuthStore } from '../stores/authStore'
+import LoginPromptModal from './LoginPromptModal'
 
 export default function CreatePostModal({ onClose }: { onClose: () => void }) {
   const queryClient = useQueryClient()
+  const token = useAuthStore((s) => s.token)
   const [petId, setPetId] = useState('')
   const [content, setContent] = useState('')
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showLoginModal, setShowLoginModal] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { data: petsData } = useQuery({
@@ -112,7 +116,13 @@ export default function CreatePostModal({ onClose }: { onClose: () => void }) {
         <div className="flex gap-3 justify-end">
           <button onClick={onClose} className="btn-secondary">Cancelar</button>
           <button
-            onClick={() => petId && createMut.mutate()}
+            onClick={() => {
+              if (!token) {
+                setShowLoginModal(true)
+                return
+              }
+              if (petId) createMut.mutate()
+            }}
             disabled={!petId || createMut.isPending}
             className="btn-primary disabled:opacity-40 disabled:shadow-none"
           >
@@ -120,6 +130,12 @@ export default function CreatePostModal({ onClose }: { onClose: () => void }) {
           </button>
         </div>
       </div>
+
+      <LoginPromptModal
+        open={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        action="publicar"
+      />
     </div>
   )
 }
