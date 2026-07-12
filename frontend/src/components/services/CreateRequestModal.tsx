@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { servicesApi, petsApi } from "../../api/endpoints";
+import { useAuthStore } from "../../stores/authStore";
 import MapLocationPicker from "../MapLocationPicker";
+import LoginPromptModal from "../LoginPromptModal";
 
 const serviceTypes = [
   { value: "paseador", label: "Paseador", icon: "🐾" },
@@ -16,6 +18,7 @@ interface Props {
 
 export default function CreateRequestModal({ onClose }: Props) {
   const queryClient = useQueryClient();
+  const token = useAuthStore((s) => s.token);
   const [step, setStep] = useState(1);
   const [type, setType] = useState("");
   const [title, setTitle] = useState("");
@@ -29,6 +32,7 @@ export default function CreateRequestModal({ onClose }: Props) {
   const [lng, setLng] = useState<number | undefined>();
   const [error, setError] = useState<string | null>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const { data: petsData } = useQuery({
     queryKey: ["my-pets"],
@@ -269,7 +273,13 @@ export default function CreateRequestModal({ onClose }: Props) {
             </button>
           ) : (
             <button
-              onClick={() => createMut.mutate()}
+              onClick={() => {
+                if (!token) {
+                  setShowLoginModal(true);
+                  return;
+                }
+                createMut.mutate();
+              }}
               disabled={createMut.isPending}
               className="btn-primary"
             >
@@ -291,6 +301,12 @@ export default function CreateRequestModal({ onClose }: Props) {
           </div>
         )}
       </div>
+
+      <LoginPromptModal
+        open={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        action="publicar un servicio"
+      />
     </div>
   );
 }

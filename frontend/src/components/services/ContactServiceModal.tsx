@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { servicesApi } from "../../api/endpoints";
+import { useAuthStore } from "../../stores/authStore";
+import LoginPromptModal from "../LoginPromptModal";
 
 interface Props {
   mode: "request" | "offer";
@@ -12,9 +14,11 @@ interface Props {
 
 export default function ContactServiceModal({ mode, id, title, subtitle, onClose }: Props) {
   const queryClient = useQueryClient();
+  const token = useAuthStore((s) => s.token);
   const [message, setMessage] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   const contactMut = useMutation({
     mutationFn: async () => {
@@ -32,6 +36,14 @@ export default function ContactServiceModal({ mode, id, title, subtitle, onClose
       setError(detail || "Error al enviar");
     },
   });
+
+  const handleContact = () => {
+    if (!token) {
+      setShowLoginModal(true);
+      return;
+    }
+    contactMut.mutate();
+  };
 
   if (success) {
     return (
@@ -102,7 +114,7 @@ export default function ContactServiceModal({ mode, id, title, subtitle, onClose
             Cancelar
           </button>
           <button
-            onClick={() => contactMut.mutate()}
+            onClick={handleContact}
             disabled={message.length < 10 || contactMut.isPending}
             className="btn-primary disabled:opacity-40"
           >
@@ -110,6 +122,11 @@ export default function ContactServiceModal({ mode, id, title, subtitle, onClose
           </button>
         </div>
       </div>
+      <LoginPromptModal
+        open={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        action="contactar"
+      />
     </div>
   );
 }

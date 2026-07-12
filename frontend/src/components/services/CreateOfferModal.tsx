@@ -1,7 +1,9 @@
 import { useState, useRef } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { servicesApi, petsApi } from "../../api/endpoints";
+import { useAuthStore } from "../../stores/authStore";
 import MapLocationPicker from "../MapLocationPicker";
+import LoginPromptModal from "../LoginPromptModal";
 
 const serviceTypes = [
   { value: "paseador", label: "Paseador", icon: "🐾" },
@@ -26,6 +28,7 @@ interface Props {
 
 export default function CreateOfferModal({ onClose }: Props) {
   const queryClient = useQueryClient();
+  const token = useAuthStore((s) => s.token);
   const [type, setType] = useState("");
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -40,6 +43,7 @@ export default function CreateOfferModal({ onClose }: Props) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -280,7 +284,13 @@ export default function CreateOfferModal({ onClose }: Props) {
             Cancelar
           </button>
           <button
-            onClick={() => createMut.mutate()}
+            onClick={() => {
+              if (!token) {
+                setShowLoginModal(true);
+                return;
+              }
+              createMut.mutate();
+            }}
             disabled={!isValid || createMut.isPending}
             className="btn-primary disabled:opacity-40"
           >
@@ -297,6 +307,12 @@ export default function CreateOfferModal({ onClose }: Props) {
           </div>
         )}
       </div>
+
+      <LoginPromptModal
+        open={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+        action="publicar un servicio"
+      />
     </div>
   );
 }
